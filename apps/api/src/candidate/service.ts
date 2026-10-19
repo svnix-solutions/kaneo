@@ -8,6 +8,7 @@ import {
   inArray,
   max,
   or,
+  type SQL,
   sql,
 } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
@@ -19,6 +20,7 @@ import { projectAccessCondition } from "../project-access/project-access-conditi
 import { assertProjectAccess } from "../project-access/assert-project-access";
 import { escapeLikePattern } from "../search/like-pattern";
 import { validateCustomFieldValue } from "../task/validate-task-fields";
+import { buildCandidateFilter, type CandidateFilter } from "./filter";
 import {
   candidateFieldDefinitionTable as fieldTable,
   candidateFieldValueTable as valueTable,
@@ -122,8 +124,31 @@ export async function listCandidates(
   limit: number,
   offset: number,
 ) {
+  return pageOfCandidates(candidateWhere(workspaceId, q), limit, offset);
+}
+
+// Search plus advanced filter (see ./filter); same page shape as the list.
+export async function queryCandidates(
+  workspaceId: string,
+  userId: string,
+  body: {
+    q?: string;
+    filter?: CandidateFilter;
+    limit: number;
+    offset: number;
+  },
+) {
+  const filter = await buildCandidateFilter(workspaceId, userId, body.filter);
+  return pageOfCandidates(
+    and(candidateWhere(workspaceId, body.q), filter),
+    body.limit,
+    body.offset,
+  );
+}
+
+function candidateWhere(workspaceId: string, q: string | undefined) {
   const term = q?.trim();
-  const where = term
+  return term
     ? and(
         eq(candidateTable.workspaceId, workspaceId),
         or(
@@ -136,12 +161,19 @@ export async function listCandidates(
         ),
       )
     : eq(candidateTable.workspaceId, workspaceId);
+}
+
+async function pageOfCandidates(
+  where: SQL | undefined,
+  limit: number,
+  offset: number,
+) {
   const [rows, [totalRow]] = await Promise.all([
     db
       .select()
       .from(candidateTable)
       .where(where)
-      .orderBy(desc(candidateTable.updatedAt))
+      .orderBy(desc(candidateTable.updatedAt), asc(candidateTable.id))
       .limit(limit)
       .offset(offset),
     db.select({ total: count() }).from(candidateTable).where(where),
@@ -343,6 +375,110 @@ export async function deleteCandidate(id: string) {
   await findCandidate(id);
   await db.delete(candidateTable).where(eq(candidateTable.id, id));
   return { success: true };
+}
+
+// ---- bulk ----------------------------------------------------------------------------
+
+// Only ids in this workspace are touched; others are ignored, not an error.
+async function idsInWorkspace(
+  conn: DbLike,
+  workspaceId: string,
+  ids: string[],
+) {
+  const rows = await conn
+    .select({ id: candidateTable.id })
+    .from(candidateTable)
+    .where(
+      and(
+        eq(candidateTable.workspaceId, workspaceId),
+        inArray(candidateTable.id, [...new Set(ids)]),
+      ),
+    );
+  return rows.map((r) => r.id);
+}
+
+export async function bulkUpdateCandidates(
+  workspaceId: string,
+  body: {
+    ids: string[];
+    source?: string | null;
+    values?: Record<string, InputValue>;
+  },
+) {
+  const entries = Object.entries(body.values ?? {})
+    .map(([name, value]) => [name.trim(), value] as const)
+    .filter(([name]) => name);
+  if (entries.length === 0 && body.source === undefined)
+    badRequest("Nothing to update: give source or values");
+
+  return db.transaction(async (tx) => {
+    const ids = await idsInWorkspace(tx, workspaceId, body.ids);
+    if (ids.length === 0) return { updated: 0 };
+
+    const defs = await tx
+      .select()
+      .from(fieldTable)
+      .where(eq(fieldTable.workspaceId, workspaceId));
+    const byName = new Map(defs.map((d) => [d.name.toLowerCase(), d]));
+    for (const [name, value] of entries) {
+      const field =
+        byName.get(name.toLowerCase()) ??
+        badRequest(`Unknown candidate field "${name}"`);
+      if (
+        value === null ||
+        (typeof value === "string" && value.trim() === "") ||
+        (Array.isArray(value) && value.length === 0)
+      ) {
+        await tx
+          .delete(valueTable)
+          .where(
+            and(
+              eq(valueTable.fieldId, field.id),
+              inArray(valueTable.candidateId, ids),
+            ),
+          );
+        continue;
+      }
+      const stored = coerceValue(field, value);
+      await tx
+        .insert(valueTable)
+        .values(
+          ids.map((candidateId) => ({
+            candidateId,
+            fieldId: field.id,
+            value: stored,
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [valueTable.candidateId, valueTable.fieldId],
+          set: { value: stored, updatedAt: new Date() },
+        });
+    }
+
+    await tx
+      .update(candidateTable)
+      .set({
+        ...(body.source !== undefined
+          ? { source: blankToNull(body.source) }
+          : {}),
+        updatedAt: new Date(),
+      })
+      .where(inArray(candidateTable.id, ids));
+    return { updated: ids.length };
+  });
+}
+
+export async function bulkDeleteCandidates(workspaceId: string, ids: string[]) {
+  const rows = await db
+    .delete(candidateTable)
+    .where(
+      and(
+        eq(candidateTable.workspaceId, workspaceId),
+        inArray(candidateTable.id, [...new Set(ids)]),
+      ),
+    )
+    .returning({ id: candidateTable.id });
+  return { deleted: rows.length };
 }
 
 // ---- field definitions ------------------------------------------------------------

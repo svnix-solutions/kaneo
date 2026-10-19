@@ -1,5 +1,22 @@
 import { z } from "../openapi";
 
+export const FILTER_OPERATORS = [
+  "contains",
+  "not_contains",
+  "starts_with",
+  "eq",
+  "neq",
+  "gt",
+  "gte",
+  "lt",
+  "lte",
+  "any_of",
+  "all_of",
+  "none_of",
+  "empty",
+  "not_empty",
+] as const;
+
 export const candidateFieldType = z.enum([
   "text",
   "number",
@@ -99,3 +116,42 @@ export const updateFieldBody = z.object({
 });
 
 export const linkTaskBody = z.object({ taskId: z.string() });
+
+export const candidateFilterCondition = z.object({
+  field: z.string().min(1).openapi({
+    description:
+      'A core property (name, phone, email, externalId, source, createdAt, updatedAt), "field:<fieldId>" for a candidate field, or "board:<projectId>" for the candidate\'s linked task on that board (values are column ids).',
+  }),
+  op: z.enum(FILTER_OPERATORS),
+  value: z
+    .union([z.string(), z.number(), z.boolean(), z.array(z.string())])
+    .nullable()
+    .optional(),
+});
+
+export const candidateFilter = z
+  .object({
+    match: z.enum(["all", "any"]).optional().default("all"),
+    conditions: z.array(candidateFilterCondition).max(20),
+  })
+  .openapi("CandidateFilter");
+
+export const queryCandidatesBody = z.object({
+  q: listCandidatesQuery.shape.q,
+  filter: candidateFilter.optional(),
+  limit: z.number().int().min(1).max(200).optional().default(50),
+  offset: z.number().int().min(0).optional().default(0),
+});
+
+const candidateIds = z.array(z.string().min(1)).min(1).max(500);
+
+export const bulkCandidatesBody = z.object({ ids: candidateIds });
+
+export const bulkUpdateCandidatesBody = z.object({
+  ids: candidateIds,
+  source: z.string().trim().max(200).nullable().optional(),
+  values: z.record(z.string(), fieldValueInput).optional().openapi({
+    description:
+      "Field values by field name (case-insensitive), set on every candidate; null clears.",
+  }),
+});

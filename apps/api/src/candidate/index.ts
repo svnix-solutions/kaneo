@@ -12,6 +12,8 @@ import { requireWorkspacePermission } from "../utils/require-workspace-permissio
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { candidateAccess } from "./candidate-access";
 import {
+  bulkCandidatesBody,
+  bulkUpdateCandidatesBody,
   candidateIdParam,
   candidateTaskParam,
   createCandidateBody,
@@ -20,6 +22,7 @@ import {
   fieldIdParam,
   linkTaskBody,
   listCandidatesQuery,
+  queryCandidatesBody,
   setCandidateValuesBody,
   taskIdParam,
   updateCandidateBody,
@@ -28,6 +31,8 @@ import {
   workspaceIdParam,
 } from "./request";
 import {
+  bulkDeleteResponseSchema,
+  bulkUpdateResponseSchema,
   candidateFieldDefinitionSchema,
   candidateListSchema,
   candidateSchema,
@@ -63,6 +68,61 @@ const listRoute = createRoute({
     200: jsonResponse("Candidates", candidateListSchema),
     403: errorResponse("No access"),
   },
+});
+
+const queryRoute = createRoute({
+  method: "post",
+  operationId: "queryCandidates",
+  path: "/workspace/{workspaceId}/query",
+  tags,
+  summary: "Filter candidates",
+  description:
+    "Search plus an advanced filter: conditions on core properties, candidate fields and board stages, joined by all/any. Newest activity first.",
+  middleware: [
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["read"] }),
+  ] as const,
+  request: { params: workspaceIdParam, body: json(queryCandidatesBody) },
+  responses: {
+    200: jsonResponse("Candidates", candidateListSchema),
+    400: errorResponse("Invalid filter"),
+    403: errorResponse("No access"),
+  },
+});
+
+const bulkUpdateRoute = createRoute({
+  method: "post",
+  operationId: "bulkUpdateCandidates",
+  path: "/workspace/{workspaceId}/bulk/update",
+  tags,
+  summary: "Update many candidates",
+  description:
+    "Sets the source and/or field values (by field name) on every listed candidate in the workspace. Ids from other workspaces are ignored.",
+  middleware: [
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: workspaceIdParam, body: json(bulkUpdateCandidatesBody) },
+  responses: {
+    200: jsonResponse("Updated", bulkUpdateResponseSchema),
+    400: errorResponse("Invalid value or unknown field"),
+  },
+});
+
+const bulkDeleteRoute = createRoute({
+  method: "post",
+  operationId: "bulkDeleteCandidates",
+  path: "/workspace/{workspaceId}/bulk/delete",
+  tags,
+  summary: "Delete many candidates",
+  description:
+    "Deletes the listed candidates in the workspace with their field values and task links (tasks are kept).",
+  middleware: [
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["delete"] }),
+  ] as const,
+  request: { params: workspaceIdParam, body: json(bulkCandidatesBody) },
+  responses: { 200: jsonResponse("Deleted", bulkDeleteResponseSchema) },
 });
 
 const createCandidateRoute = createRoute({
@@ -336,6 +396,34 @@ const candidate = apiRouter()
       200,
     );
   })
+  .openapi(queryRoute, async (c) =>
+    c.json(
+      await svc.queryCandidates(
+        c.req.valid("param").workspaceId,
+        c.get("userId"),
+        c.req.valid("json"),
+      ),
+      200,
+    ),
+  )
+  .openapi(bulkUpdateRoute, async (c) =>
+    c.json(
+      await svc.bulkUpdateCandidates(
+        c.req.valid("param").workspaceId,
+        c.req.valid("json"),
+      ),
+      200,
+    ),
+  )
+  .openapi(bulkDeleteRoute, async (c) =>
+    c.json(
+      await svc.bulkDeleteCandidates(
+        c.req.valid("param").workspaceId,
+        c.req.valid("json").ids,
+      ),
+      200,
+    ),
+  )
   .openapi(createCandidateRoute, async (c) =>
     c.json(
       await svc.createCandidate(
