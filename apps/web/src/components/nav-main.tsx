@@ -7,6 +7,7 @@ import {
   Mail,
   Users,
 } from "lucide-react";
+import { Contact } from "lucide-react"; // fork: candidates
 import { useTranslation } from "react-i18next";
 import {
   SidebarGroup,
@@ -67,6 +68,7 @@ export function NavMain() {
       icon: Users,
       url: `${homeUrl}/members`,
     },
+    { title: t("candidates:nav"), icon: Contact, url: `${homeUrl}/candidates` }, // fork: candidates
   ];
 
   // Invitations to other workspaces only matter while one is waiting.

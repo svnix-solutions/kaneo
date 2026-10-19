@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import TaskCandidates from "@/components/candidates/task-candidates"; // fork: candidates
 import { ExternalLinksAccordion } from "@/components/external-links/external-links-accordion";
 import useExternalLinks from "@/hooks/queries/external-link/use-external-links";
 import useGetProject from "@/hooks/queries/project/use-get-project";
@@ -93,6 +94,8 @@ export default function TaskDetailsContent({
           projectId={projectId}
           workspaceId={workspaceId}
         />
+        {/* fork: candidates */}
+        <TaskCandidates taskId={taskId} workspaceId={workspaceId} />
         <ExternalLinksAccordion
           taskId={taskId}
           externalLinks={externalLinks as ExternalLink[]}
