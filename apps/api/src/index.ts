@@ -26,6 +26,8 @@ import column from "./column";
 import comment from "./comment";
 import config from "./config";
 import customField from "./custom-field";
+import candidate from "./candidate"; // fork: candidates
+import { migrateCandidates } from "./candidate/migrate"; // fork: candidates
 import db, { getDatabase, schema } from "./database";
 import { apiErrorSchema } from "./errors/api-error-schema";
 import { httpExceptionResponse } from "./errors/http-exception-response";
@@ -873,6 +875,7 @@ export function createApp() {
   const invitationApi = api.route("/invitation", invitation);
   const workspaceApi = api.route("/workspace", workspace);
   const customFieldApi = api.route("/custom-field", customField);
+  const candidateApi = api.route("/candidate", candidate); // fork: candidates
   const importApi = api.route("/import", importRoutes);
   const userApi = api.route("/user", user);
   const adminApi = api.route("/admin", admin);
@@ -1005,6 +1008,7 @@ export function createApp() {
     workflowRuleApi,
     workspaceApi,
     customFieldApi,
+    candidateApi, // fork: candidates
     importApi,
     oauthApi,
   };
@@ -1029,6 +1033,7 @@ export async function runStartupTasks() {
       await migrate(getDatabase(), {
         migrationsFolder: `${currentDir}/../drizzle`,
       });
+      await migrateCandidates(getDatabase(), `${currentDir}/../drizzle`); // fork: candidates
       console.log("✅ Database migrated successfully!");
     },
   });
@@ -1138,6 +1143,7 @@ const {
   workflowRuleApi,
   workspaceApi,
   customFieldApi,
+  candidateApi, // fork: candidates
   importApi,
   oauthApi,
 } = createdApp;
@@ -1181,6 +1187,7 @@ export type AppType =
   | typeof invitationApi
   | typeof workspaceApi
   | typeof customFieldApi
+  | typeof candidateApi // fork: candidates
   | typeof importApi
   | typeof userApi
   | typeof adminApi
