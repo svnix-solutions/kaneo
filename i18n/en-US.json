@@ -3767,7 +3767,8 @@
 			"email": "Email",
 			"externalId": "External ID",
 			"source": "Source",
-			"updated": "Updated"
+			"updated": "Updated",
+			"created": "Added"
 		},
 		"emptyTitle": "No candidates yet",
 		"emptyDescription": "Add a candidate, or let an integration create them.",
@@ -3821,6 +3822,85 @@
 			"unlink": "Unlink candidate",
 			"linkError": "Couldn't link candidate.",
 			"unlinkError": "Couldn't unlink candidate."
+		},
+		"filter": {
+			"button": "Filter",
+			"empty": "No conditions yet. Add one to narrow the list.",
+			"addCondition": "Add condition",
+			"subject": "Filter on",
+			"operator": "Condition",
+			"value": "Value",
+			"valuePlaceholder": "Value…",
+			"choose": "Choose…",
+			"noOptions": "No options",
+			"checked": "Checked",
+			"unchecked": "Not checked",
+			"removeCondition": "Remove {{name}} filter",
+			"applied": "Applied filters",
+			"match": "Match",
+			"matchPrefix": "Match",
+			"matchSuffix": "of these conditions",
+			"matchMode": {
+				"all": "all",
+				"any": "any"
+			},
+			"matchChip": {
+				"all": "All of:",
+				"any": "Any of:"
+			},
+			"noResults": "No candidates match these filters.",
+			"groups": {
+				"core": "Properties",
+				"field": "Fields",
+				"board": "Boards"
+			},
+			"operators": {
+				"contains": "contains",
+				"not_contains": "doesn't contain",
+				"starts_with": "starts with",
+				"eq": "is",
+				"neq": "is not",
+				"gt": "is more than",
+				"gte": "is at least",
+				"lt": "is less than",
+				"lte": "is at most",
+				"any_of": "is any of",
+				"all_of": "has all of",
+				"none_of": "is none of",
+				"empty": "is empty",
+				"not_empty": "is not empty",
+				"dateEq": "is on",
+				"dateGt": "is after",
+				"dateGte": "is on or after",
+				"dateLt": "is before",
+				"dateLte": "is on or before",
+				"booleanEq": "is",
+				"hasAnyOf": "has any of",
+				"hasNoneOf": "has none of",
+				"boardAnyOf": "is in stage",
+				"boardNoneOf": "is not in stage",
+				"boardEmpty": "is not on board",
+				"boardNotEmpty": "is on board"
+			}
+		},
+		"bulk": {
+			"selectAll": "Select all candidates",
+			"selectOne": "Select {{name}}",
+			"setField": "Set field",
+			"setFieldTo": "Set {{field}} to",
+			"fieldPlaceholder": "Choose a field…",
+			"apply": "Apply",
+			"updated_one": "Updated {{count}} candidate.",
+			"updated_other": "Updated {{count}} candidates.",
+			"updateError": "Couldn't update {{field}}.",
+			"export": "Export CSV",
+			"delete": "Delete",
+			"deleteTitle_one": "Delete {{count}} candidate?",
+			"deleteTitle_other": "Delete {{count}} candidates?",
+			"deleteDescription": "The candidates and their field values are removed. Linked tasks are kept. This can't be undone.",
+			"deleted_one": "Deleted {{count}} candidate.",
+			"deleted_other": "Deleted {{count}} candidates.",
+			"deleteError": "Failed to delete candidates."
 		}
 	}
 }

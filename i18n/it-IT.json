@@ -3822,7 +3822,8 @@
 			"name": "Name",
 			"phone": "Phone",
 			"source": "Source",
-			"updated": "Updated"
+			"updated": "Updated",
+			"created": "Added"
 		},
 		"create": {
 			"creating": "Creating...",
@@ -3880,6 +3881,88 @@
 			"title": "Candidates",
 			"unlink": "Unlink candidate",
 			"unlinkError": "Couldn't unlink candidate."
+		},
+		"bulk": {
+			"apply": "Apply",
+			"delete": "Delete",
+			"deleted_many": "Deleted {{count}} candidates.",
+			"deleted_one": "Deleted {{count}} candidate.",
+			"deleted_other": "Deleted {{count}} candidates.",
+			"deleteError": "Failed to delete candidates.",
+			"deleteTitle_many": "Delete {{count}} candidates?",
+			"deleteTitle_one": "Delete {{count}} candidate?",
+			"deleteTitle_other": "Delete {{count}} candidates?",
+			"export": "Export CSV",
+			"fieldPlaceholder": "Choose a field…",
+			"selectAll": "Select all candidates",
+			"selectOne": "Select {{name}}",
+			"setField": "Set field",
+			"setFieldTo": "Set {{field}} to",
+			"updated_many": "Updated {{count}} candidates.",
+			"updated_one": "Updated {{count}} candidate.",
+			"updated_other": "Updated {{count}} candidates.",
+			"updateError": "Couldn't update {{field}}.",
+			"deleteDescription": "The candidates and their field values are removed. Linked tasks are kept. This can't be undone."
+		},
+		"filter": {
+			"addCondition": "Add condition",
+			"applied": "Applied filters",
+			"button": "Filter",
+			"checked": "Checked",
+			"choose": "Choose…",
+			"empty": "No conditions yet. Add one to narrow the list.",
+			"groups": {
+				"board": "Boards",
+				"core": "Properties",
+				"field": "Fields"
+			},
+			"match": "Match",
+			"matchChip": {
+				"all": "All of:",
+				"any": "Any of:"
+			},
+			"matchMode": {
+				"all": "all",
+				"any": "any"
+			},
+			"matchPrefix": "Match",
+			"matchSuffix": "of these conditions",
+			"noOptions": "No options",
+			"noResults": "No candidates match these filters.",
+			"operator": "Condition",
+			"operators": {
+				"all_of": "has all of",
+				"any_of": "is any of",
+				"boardAnyOf": "is in stage",
+				"boardEmpty": "is not on board",
+				"boardNoneOf": "is not in stage",
+				"boardNotEmpty": "is on board",
+				"booleanEq": "is",
+				"contains": "contains",
+				"dateEq": "is on",
+				"dateGt": "is after",
+				"dateGte": "is on or after",
+				"dateLt": "is before",
+				"dateLte": "is on or before",
+				"empty": "is empty",
+				"eq": "is",
+				"gt": "is more than",
+				"gte": "is at least",
+				"hasAnyOf": "has any of",
+				"hasNoneOf": "has none of",
+				"lt": "is less than",
+				"lte": "is at most",
+				"neq": "is not",
+				"none_of": "is none of",
+				"not_contains": "doesn't contain",
+				"not_empty": "is not empty",
+				"starts_with": "starts with"
+			},
+			"removeCondition": "Remove {{name}} filter",
+			"subject": "Filter on",
+			"unchecked": "Not checked",
+			"value": "Value",
+			"valuePlaceholder": "Value…"
 		}
 	}
 }

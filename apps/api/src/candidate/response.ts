@@ -67,3 +67,7 @@ export const linkResponseSchema = z.object({
 });
 
 export const successSchema = z.object({ success: z.boolean() });
+
+export const bulkUpdateResponseSchema = z.object({ updated: z.number() });
+
+export const bulkDeleteResponseSchema = z.object({ deleted: z.number() });
