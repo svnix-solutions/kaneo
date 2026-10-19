@@ -3696,5 +3696,72 @@
 			"startLink": "啟動並驗證服務",
 			"startLinkDescription": "啟動整個堆疊、檢視狀態，並確認應用程式可用。"
 		}
+	},
+	"candidates": {
+		"columns": {
+			"email": "Email",
+			"externalId": "External ID",
+			"name": "Name",
+			"phone": "Phone",
+			"source": "Source",
+			"updated": "Updated"
+		},
+		"create": {
+			"creating": "Creating...",
+			"description": "Only the name is required. Fields can be filled in afterwards.",
+			"error": "Failed to create candidate.",
+			"nameRequired": "Name is required.",
+			"submit": "Create candidate",
+			"success": "Candidate created.",
+			"title": "New candidate"
+		},
+		"detail": {
+			"addedOn": "Added {{date}}",
+			"back": "Candidates",
+			"delete": "Delete candidate",
+			"deleteDescription": "The candidate and its field values are removed. Linked tasks are kept. This can't be undone.",
+			"deleteError": "Failed to delete candidate.",
+			"deleteSuccess": "Candidate deleted.",
+			"deleteTitle": "Delete “{{name}}”?",
+			"details": "Details",
+			"fields": "Fields",
+			"noFields": "No candidate fields yet.",
+			"noTasks": "Not linked to any task yet.",
+			"notFound": "Candidate not found",
+			"notFoundDescription": "It may have been deleted, or you don't have access to it.",
+			"saveError": "Couldn't save {{field}}",
+			"tasks": "Tasks"
+		},
+		"emptyDescription": "Add a candidate, or let an integration create them.",
+		"emptyTitle": "No candidates yet",
+		"fields": {
+			"deleteDescription": "The field and its value on every candidate are removed. This can't be undone.",
+			"description": "Every candidate in this workspace has these fields.",
+			"dialogDescription": "Every candidate in this workspace gets this field.",
+			"empty": "No candidate fields yet.",
+			"forbidden": "You don't have permission to change candidate fields.",
+			"manage": "Manage fields",
+			"newField": "New field",
+			"title": "Candidate fields"
+		},
+		"loadError": "Couldn't load candidates.",
+		"nav": "Candidates",
+		"newCandidate": "New candidate",
+		"noResults": "No candidates match “{{query}}”.",
+		"pageTitle": "Candidates",
+		"searchPlaceholder": "Search name, phone, email or ID…",
+		"showing": "Showing {{shown}} of {{total}}",
+		"task": {
+			"empty": "No linked candidates.",
+			"linkAria": "Link candidate",
+			"linkError": "Couldn't link candidate.",
+			"noResults": "No candidates found",
+			"open": "Open candidate",
+			"searchPlaceholder": "Search candidates…",
+			"selectHint": "Select a candidate to link",
+			"title": "Candidates",
+			"unlink": "Unlink candidate",
+			"unlinkError": "Couldn't unlink candidate."
+		}
 	}
 }

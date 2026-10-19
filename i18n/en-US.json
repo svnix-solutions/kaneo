@@ -3755,5 +3755,72 @@
 			"startLink": "Start and verify the services",
 			"startLinkDescription": "Start the stack, inspect its status, and check that the application is available."
 		}
+	},
+	"candidates": {
+		"nav": "Candidates",
+		"pageTitle": "Candidates",
+		"searchPlaceholder": "Search name, phone, email or ID…",
+		"newCandidate": "New candidate",
+		"columns": {
+			"name": "Name",
+			"phone": "Phone",
+			"email": "Email",
+			"externalId": "External ID",
+			"source": "Source",
+			"updated": "Updated"
+		},
+		"emptyTitle": "No candidates yet",
+		"emptyDescription": "Add a candidate, or let an integration create them.",
+		"noResults": "No candidates match “{{query}}”.",
+		"showing": "Showing {{shown}} of {{total}}",
+		"loadError": "Couldn't load candidates.",
+		"create": {
+			"title": "New candidate",
+			"description": "Only the name is required. Fields can be filled in afterwards.",
+			"submit": "Create candidate",
+			"creating": "Creating...",
+			"success": "Candidate created.",
+			"error": "Failed to create candidate.",
+			"nameRequired": "Name is required."
+		},
+		"detail": {
+			"back": "Candidates",
+			"details": "Details",
+			"fields": "Fields",
+			"noFields": "No candidate fields yet.",
+			"tasks": "Tasks",
+			"noTasks": "Not linked to any task yet.",
+			"notFound": "Candidate not found",
+			"notFoundDescription": "It may have been deleted, or you don't have access to it.",
+			"saveError": "Couldn't save {{field}}",
+			"addedOn": "Added {{date}}",
+			"delete": "Delete candidate",
+			"deleteTitle": "Delete “{{name}}”?",
+			"deleteDescription": "The candidate and its field values are removed. Linked tasks are kept. This can't be undone.",
+			"deleteSuccess": "Candidate deleted.",
+			"deleteError": "Failed to delete candidate."
+		},
+		"fields": {
+			"manage": "Manage fields",
+			"title": "Candidate fields",
+			"description": "Every candidate in this workspace has these fields.",
+			"newField": "New field",
+			"empty": "No candidate fields yet.",
+			"dialogDescription": "Every candidate in this workspace gets this field.",
+			"deleteDescription": "The field and its value on every candidate are removed. This can't be undone.",
+			"forbidden": "You don't have permission to change candidate fields."
+		},
+		"task": {
+			"title": "Candidates",
+			"empty": "No linked candidates.",
+			"searchPlaceholder": "Search candidates…",
+			"noResults": "No candidates found",
+			"selectHint": "Select a candidate to link",
+			"linkAria": "Link candidate",
+			"open": "Open candidate",
+			"unlink": "Unlink candidate",
+			"linkError": "Couldn't link candidate.",
+			"unlinkError": "Couldn't unlink candidate."
+		}
 	}
 }

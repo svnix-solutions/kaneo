@@ -1,0 +1,463 @@
+{
+	"id": "370b0f76-3c9e-46f5-bf3a-988d5b1fcbb1",
+	"prevId": "00000000-0000-0000-0000-000000000000",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.candidate_field_definition": {
+			"name": "candidate_field_definition",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"required": {
+					"name": "required",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"default_value": {
+					"name": "default_value",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"options": {
+					"name": "options",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"candidate_field_def_workspace_name_unique": {
+					"name": "candidate_field_def_workspace_name_unique",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "lower(\"name\")",
+							"asc": true,
+							"isExpression": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"candidate_field_definition_workspace_id_workspace_id_fk": {
+					"name": "candidate_field_definition_workspace_id_workspace_id_fk",
+					"tableFrom": "candidate_field_definition",
+					"tableTo": "workspace",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.candidate_field_value": {
+			"name": "candidate_field_value",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"candidate_id": {
+					"name": "candidate_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"field_id": {
+					"name": "field_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"value": {
+					"name": "value",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"candidate_field_value_fieldId_idx": {
+					"name": "candidate_field_value_fieldId_idx",
+					"columns": [
+						{
+							"expression": "field_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"candidate_field_value_candidate_id_candidate_id_fk": {
+					"name": "candidate_field_value_candidate_id_candidate_id_fk",
+					"tableFrom": "candidate_field_value",
+					"tableTo": "candidate",
+					"columnsFrom": ["candidate_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"candidate_field_value_field_id_candidate_field_definition_id_fk": {
+					"name": "candidate_field_value_field_id_candidate_field_definition_id_fk",
+					"tableFrom": "candidate_field_value",
+					"tableTo": "candidate_field_definition",
+					"columnsFrom": ["field_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"candidate_field_value_candidate_field_unique": {
+					"name": "candidate_field_value_candidate_field_unique",
+					"nullsNotDistinct": false,
+					"columns": ["candidate_id", "field_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.candidate": {
+			"name": "candidate",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"phone": {
+					"name": "phone",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"external_id": {
+					"name": "external_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source": {
+					"name": "source",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"candidate_workspace_name_idx": {
+					"name": "candidate_workspace_name_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"candidate_workspace_phone_idx": {
+					"name": "candidate_workspace_phone_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "phone",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"candidate_workspace_email_idx": {
+					"name": "candidate_workspace_email_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "email",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"candidate_workspace_id_workspace_id_fk": {
+					"name": "candidate_workspace_id_workspace_id_fk",
+					"tableFrom": "candidate",
+					"tableTo": "workspace",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"candidate_workspace_external_id_unique": {
+					"name": "candidate_workspace_external_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["workspace_id", "external_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.task_candidate": {
+			"name": "task_candidate",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"task_id": {
+					"name": "task_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"candidate_id": {
+					"name": "candidate_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"task_candidate_candidateId_idx": {
+					"name": "task_candidate_candidateId_idx",
+					"columns": [
+						{
+							"expression": "candidate_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"task_candidate_task_id_task_id_fk": {
+					"name": "task_candidate_task_id_task_id_fk",
+					"tableFrom": "task_candidate",
+					"tableTo": "task",
+					"columnsFrom": ["task_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_candidate_candidate_id_candidate_id_fk": {
+					"name": "task_candidate_candidate_id_candidate_id_fk",
+					"tableFrom": "task_candidate",
+					"tableTo": "candidate",
+					"columnsFrom": ["candidate_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_candidate_created_by_user_id_fk": {
+					"name": "task_candidate_created_by_user_id_fk",
+					"tableFrom": "task_candidate",
+					"tableTo": "user",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"task_candidate_task_candidate_unique": {
+					"name": "task_candidate_task_candidate_unique",
+					"nullsNotDistinct": false,
+					"columns": ["task_id", "candidate_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}
