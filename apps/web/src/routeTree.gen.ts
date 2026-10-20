@@ -64,8 +64,9 @@ import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRo
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
-import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/index'
-import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/$candidateId'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/index'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/$contactId'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/pools/$poolId'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/backlog'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/board'
@@ -399,20 +400,29 @@ const LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute =
       getParentRoute: () => LayoutAuthenticatedDashboardSettingsProjectsRoute,
     } as any,
   )
-const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute =
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRouteImport.update(
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRouteImport.update(
     {
-      id: '/candidates/',
-      path: '/candidates/',
+      id: '/contacts/',
+      path: '/contacts/',
       getParentRoute: () =>
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
-const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute =
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRouteImport.update(
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRouteImport.update(
     {
-      id: '/candidates/$candidateId',
-      path: '/candidates/$candidateId',
+      id: '/contacts/$contactId',
+      path: '/contacts/$contactId',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRouteImport.update(
+    {
+      id: '/pools/$poolId',
+      path: '/pools/$poolId',
       getParentRoute: () =>
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
@@ -526,8 +536,9 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
-  '/dashboard/workspace/$workspaceId/candidates/$candidateId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute
-  '/dashboard/workspace/$workspaceId/candidates/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute
+  '/dashboard/workspace/$workspaceId/contacts/$contactId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute
+  '/dashboard/workspace/$workspaceId/pools/$poolId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute
+  '/dashboard/workspace/$workspaceId/contacts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/calendar': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute
@@ -586,8 +597,9 @@ export interface FileRoutesByTo {
   '/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
-  '/dashboard/workspace/$workspaceId/candidates/$candidateId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute
-  '/dashboard/workspace/$workspaceId/candidates': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute
+  '/dashboard/workspace/$workspaceId/contacts/$contactId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute
+  '/dashboard/workspace/$workspaceId/pools/$poolId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute
+  '/dashboard/workspace/$workspaceId/contacts': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/calendar': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute
@@ -652,8 +664,9 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
-  '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/$candidateId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute
-  '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/$contactId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/pools/$poolId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/backlog': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/board': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/calendar': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute
@@ -717,8 +730,9 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/integrations'
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
-    | '/dashboard/workspace/$workspaceId/candidates/$candidateId'
-    | '/dashboard/workspace/$workspaceId/candidates/'
+    | '/dashboard/workspace/$workspaceId/contacts/$contactId'
+    | '/dashboard/workspace/$workspaceId/pools/$poolId'
+    | '/dashboard/workspace/$workspaceId/contacts/'
     | '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/dashboard/workspace/$workspaceId/project/$projectId/calendar'
@@ -777,8 +791,9 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/integrations'
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
-    | '/dashboard/workspace/$workspaceId/candidates/$candidateId'
-    | '/dashboard/workspace/$workspaceId/candidates'
+    | '/dashboard/workspace/$workspaceId/contacts/$contactId'
+    | '/dashboard/workspace/$workspaceId/pools/$poolId'
+    | '/dashboard/workspace/$workspaceId/contacts'
     | '/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/dashboard/workspace/$workspaceId/project/$projectId/calendar'
@@ -842,8 +857,9 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
-    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/$candidateId'
-    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/$contactId'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/pools/$poolId'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/backlog'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/board'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/calendar'
@@ -1250,18 +1266,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardSettingsProjectsRoute
     }
-    '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/': {
-      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/'
-      path: '/candidates'
-      fullPath: '/dashboard/workspace/$workspaceId/candidates/'
-      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRouteImport
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/'
+      path: '/contacts'
+      fullPath: '/dashboard/workspace/$workspaceId/contacts/'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
-    '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/$candidateId': {
-      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/candidates/$candidateId'
-      path: '/candidates/$candidateId'
-      fullPath: '/dashboard/workspace/$workspaceId/candidates/$candidateId'
-      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRouteImport
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/$contactId': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/contacts/$contactId'
+      path: '/contacts/$contactId'
+      fullPath: '/dashboard/workspace/$workspaceId/contacts/$contactId'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/pools/$poolId': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/pools/$poolId'
+      path: '/pools/$poolId'
+      fullPath: '/dashboard/workspace/$workspaceId/pools/$poolId'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/': {
@@ -1442,8 +1465,9 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdCalendarRoute
@@ -1466,10 +1490,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute,
-    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute:
-      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesCandidateIdRoute,
-    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute:
-      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCandidatesIndexRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsContactIdRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPoolsPoolIdRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdContactsIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRoute:

@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { Client } from "pg";
 import db from "../../../apps/api/src/database";
-import { migrateCandidates } from "../../../apps/api/src/candidate/migrate"; // fork: candidates
+import { migrateContacts } from "../../../apps/api/src/contact/migrate"; // fork: contacts
 
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const migrationsFolder = resolve(currentDir, "../../../apps/api/drizzle");
@@ -69,7 +69,7 @@ export async function ensureTestDatabaseMigrated() {
       await migrate(db, {
         migrationsFolder,
       });
-      await migrateCandidates(db, migrationsFolder); // fork: candidates
+      await migrateContacts(db, migrationsFolder); // fork: contacts
     })();
   }
 

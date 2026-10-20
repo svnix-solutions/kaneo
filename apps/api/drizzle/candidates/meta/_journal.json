@@ -8,6 +8,13 @@
 			"when": 1792407374267,
 			"tag": "0000_candidates",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1792496307073,
+			"tag": "0001_contacts_pools",
+			"breakpoints": true
 		}
 	]
 }
