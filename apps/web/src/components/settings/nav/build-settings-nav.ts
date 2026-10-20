@@ -36,6 +36,7 @@ const PROJECT_SECTIONS = [
   { id: "visibility", labelKey: "settings:projectVisibility.title" },
   { id: "integrations", labelKey: "settings:projectIntegrations.title" },
   { id: "calendar", labelKey: "settings:calendarFeeds.title" },
+  { id: "screening", labelKey: "contacts:screening.settingsTitle" }, // fork: contacts
 ] as const;
 
 function buildProject(

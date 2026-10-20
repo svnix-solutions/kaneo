@@ -1,6 +1,7 @@
 import { client } from "@kaneo/libs";
 
 import { HttpError } from "@/lib/http-error";
+import type { ContactPriority } from "./bulk-update-contacts";
 
 export type UpdateContactRequest = {
   id: string;
@@ -9,6 +10,7 @@ export type UpdateContactRequest = {
   email?: string | null;
   externalId?: string | null;
   source?: string | null;
+  priority?: ContactPriority;
 };
 
 async function updateContact({ id, ...json }: UpdateContactRequest) {

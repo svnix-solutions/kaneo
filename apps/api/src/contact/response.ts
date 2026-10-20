@@ -13,9 +13,11 @@ export const contactSchema = z
     email: z.string().nullable(),
     externalId: z.string().nullable(),
     source: z.string().nullable(),
+    priority: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
     pools: z.array(poolRefSchema),
+    targetPools: z.array(poolRefSchema),
   })
   .openapi("Contact");
 
@@ -37,6 +39,7 @@ export const poolSchema = z
     description: z.string().nullable(),
     icon: z.string().nullable(),
     position: z.number(),
+    screeningProjectId: z.string().nullable(),
     memberCount: z.number(),
     createdAt: z.string(),
   })
@@ -76,7 +79,7 @@ export const pipelineSchema = z
 // A contact as a row of a pool: the contact's own properties (id is the
 // contact id) plus the membership and its field values.
 export const poolMemberSchema = contactSchema
-  .omit({ pools: true })
+  .omit({ pools: true, targetPools: true })
   .extend({
     memberId: z.string(),
     poolId: z.string(),
@@ -93,7 +96,7 @@ export const poolMemberListSchema = z.object({
 });
 
 export const taskPoolMemberSchema = contactSchema
-  .omit({ pools: true })
+  .omit({ pools: true, targetPools: true })
   .extend({ memberId: z.string(), pool: poolRefSchema })
   .openapi("TaskPoolMember");
 
@@ -150,3 +153,35 @@ export const bulkUpdateResponseSchema = z.object({ updated: z.number() });
 export const bulkDeleteResponseSchema = z.object({ deleted: z.number() });
 export const bulkAddResponseSchema = z.object({ added: z.number() });
 export const bulkRemoveResponseSchema = z.object({ removed: z.number() });
+
+export const messageStepSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    typebotPublicId: z.string(),
+    offsetDays: z.number(),
+    position: z.number(),
+    enabled: z.boolean(),
+  })
+  .openapi("MessageStep");
+
+export const screeningContextSchema = z
+  .object({
+    task: z.object({
+      id: z.string(),
+      number: z.number().nullable(),
+      title: z.string(),
+      status: z.string(),
+      priority: z.string().nullable(),
+      projectId: z.string(),
+      projectSlug: z.string(),
+      projectName: z.string(),
+      columnName: z.string().nullable(),
+      isFinal: z.boolean(),
+      inBacklog: z.boolean(),
+    }),
+    contacts: z.array(contactSchema.omit({ pools: true, targetPools: true })),
+    pools: z.array(poolRefSchema),
+    steps: z.array(messageStepSchema),
+  })
+  .openapi("ScreeningContext");

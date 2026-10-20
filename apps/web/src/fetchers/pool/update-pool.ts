@@ -8,6 +8,7 @@ export type UpdatePoolRequest = {
   slug?: string;
   description?: string | null;
   icon?: string | null;
+  screeningProjectId?: string | null;
   position?: number;
 };
 

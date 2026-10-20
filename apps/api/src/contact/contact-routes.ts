@@ -22,6 +22,7 @@ import {
   linkTaskBody,
   listContactsQuery,
   queryBody,
+  setTargetsBody,
   taskIdParam,
   updateContactBody,
   upsertContactBody,
@@ -250,6 +251,23 @@ const membershipsRoute = createRoute({
   },
 });
 
+const setTargetsRoute = createRoute({
+  method: "put",
+  operationId: "setContactTargetPools",
+  path: "/{id}/targets",
+  tags,
+  summary: "Set the pools a contact is meant for",
+  middleware: [
+    contactAccess.fromContact(),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: contactIdParam, body: json(setTargetsBody) },
+  responses: {
+    200: jsonResponse("Contact", contactSchema),
+    400: errorResponse("Unknown pool"),
+  },
+});
+
 const listTasksRoute = createRoute({
   method: "get",
   operationId: "getContactTasks",
@@ -382,6 +400,15 @@ const contact = apiRouter()
   )
   .openapi(membershipsRoute, async (c) =>
     c.json(await svc.listContactMemberships(c.req.valid("param").id), 200),
+  )
+  .openapi(setTargetsRoute, async (c) =>
+    c.json(
+      await svc.setTargets(
+        c.req.valid("param").id,
+        c.req.valid("json").poolIds,
+      ),
+      200,
+    ),
   )
   .openapi(listTasksRoute, async (c) =>
     c.json(

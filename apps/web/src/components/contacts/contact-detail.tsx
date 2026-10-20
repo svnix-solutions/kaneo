@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/settings/confirm-dialog";
 import { SectionHeader } from "@/components/task/sections/section-header";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
+import type { ContactPriority } from "@/fetchers/contact/bulk-update-contacts";
 import type { Contact, ContactMembership } from "@/fetchers/contact/types";
 import type { UpdateContactRequest } from "@/fetchers/contact/update-contact";
 import useDeleteContact from "@/hooks/mutations/contact/use-delete-contact";
@@ -24,11 +25,15 @@ import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatDateMedium } from "@/lib/format";
 import { toast } from "@/lib/toast";
 import { ContactLinkedTasks } from "./contact-linked-tasks";
+import { parseMultiselect } from "@/components/custom-fields/parse-multiselect";
+import useSetContactTargets from "@/hooks/mutations/contact/use-set-contact-targets";
 import {
+  choiceField,
   textField,
   toCustomFieldDefinition,
   toValueInput,
 } from "./field-adapter";
+import { priorityOptions } from "./priority";
 
 const CORE_KEYS = ["name", "phone", "email", "externalId", "source"] as const;
 type CoreKey = (typeof CORE_KEYS)[number];
@@ -45,6 +50,10 @@ export function ContactDetail({
   const { data: memberships = [] } = useGetContactPools(contact.id);
   const { data: pools = [] } = useGetPools(workspaceId);
   const { mutate: updateContact } = useUpdateContact();
+  const { mutate: setTargets } = useSetContactTargets();
+  const priorities = priorityOptions();
+  const priorityLabel =
+    priorities.find((p) => p.value === contact.priority)?.label ?? "";
   const { mutateAsync: addToPool } = useUpsertPoolMember();
   const { mutateAsync: deleteContact, isPending: deleting } =
     useDeleteContact();
@@ -160,6 +169,67 @@ export function ContactDetail({
               />
             );
           })}
+          <CustomFieldRow
+            field={choiceField(
+              "priority",
+              t("contacts:columns.priority"),
+              "dropdown",
+              priorities.map((p) => p.label),
+            )}
+            value={priorityLabel}
+            disabled={!canEdit}
+            onChange={(label) => {
+              const priority =
+                priorities.find((p) => p.label === label)?.value ??
+                "no-priority";
+              updateContact(
+                { id: contact.id, priority: priority as ContactPriority },
+                {
+                  onError: (error) =>
+                    toast.error(
+                      errorMessage(
+                        error,
+                        t("contacts:detail.saveError", {
+                          field: t("contacts:columns.priority"),
+                        }),
+                      ),
+                    ),
+                },
+              );
+            }}
+          />
+          <CustomFieldRow
+            field={choiceField(
+              "targets",
+              t("contacts:columns.targetPools"),
+              "multiselect",
+              pools.map((p) => p.name),
+            )}
+            value={JSON.stringify(contact.targetPools.map((p) => p.name))}
+            disabled={!canEdit}
+            onChange={(value) => {
+              const names = parseMultiselect(value);
+              setTargets(
+                {
+                  id: contact.id,
+                  poolIds: pools
+                    .filter((p) => names.includes(p.name))
+                    .map((p) => p.id),
+                },
+                {
+                  onError: (error) =>
+                    toast.error(
+                      errorMessage(
+                        error,
+                        t("contacts:detail.saveError", {
+                          field: t("contacts:columns.targetPools"),
+                        }),
+                      ),
+                    ),
+                },
+              );
+            }}
+          />
         </div>
       </section>
 

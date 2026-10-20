@@ -14,11 +14,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDateMedium } from "@/lib/format";
+import { getPriorityLabel } from "@/lib/i18n/domain";
+import { getPriorityIcon } from "@/lib/priority";
 import type { ContactRow } from "./contact-row";
 import { FieldValue } from "./field-value";
 
 const CORE_COLUMNS = [
   "name",
+  "priority",
   "phone",
   "email",
   "externalId",
@@ -111,9 +114,14 @@ export function ContactsTable({
             </TableHead>
           ))}
           {showPools ? (
-            <TableHead className="whitespace-nowrap font-medium text-foreground">
-              {t("contacts:columns.pools")}
-            </TableHead>
+            <>
+              <TableHead className="whitespace-nowrap font-medium text-foreground">
+                {t("contacts:columns.targetPools")}
+              </TableHead>
+              <TableHead className="whitespace-nowrap font-medium text-foreground">
+                {t("contacts:columns.pools")}
+              </TableHead>
+            </>
           ) : null}
           {showPipelines ? (
             <TableHead className="whitespace-nowrap font-medium text-foreground">
@@ -140,6 +148,11 @@ export function ContactsTable({
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                 ))}
+                {showPools ? (
+                  <TableCell className="py-3">
+                    <Skeleton className="h-4 w-16" />
+                  </TableCell>
+                ) : null}
                 {showPools || showPipelines ? (
                   <TableCell className="py-3">
                     <Skeleton className="h-4 w-16" />
@@ -192,6 +205,14 @@ export function ContactsTable({
                 <TableCell className="py-3 font-medium">
                   {contact.name}
                 </TableCell>
+                <TableCell className={muted}>
+                  {contact.priority && contact.priority !== "no-priority" ? (
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                      {getPriorityIcon(contact.priority)}
+                      {getPriorityLabel(contact.priority)}
+                    </span>
+                  ) : null}
+                </TableCell>
                 <TableCell className={muted}>{contact.phone}</TableCell>
                 <TableCell className={muted}>{contact.email}</TableCell>
                 <TableCell className={`${muted} font-mono`}>
@@ -201,6 +222,21 @@ export function ContactsTable({
                 <TableCell className={`${muted} whitespace-nowrap`}>
                   {formatDateMedium(contact.updatedAt)}
                 </TableCell>
+                {showPools ? (
+                  <TableCell className="py-3">
+                    <div className="flex max-w-64 flex-wrap gap-1">
+                      {(contact.targetPools ?? []).map((pool) => (
+                        <Badge
+                          key={pool.id}
+                          variant="outline"
+                          className="border-dashed text-muted-foreground"
+                        >
+                          {pool.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                ) : null}
                 {showPools ? (
                   <TableCell className="py-3">
                     <div className="flex max-w-64 flex-wrap gap-1">

@@ -75,14 +75,24 @@ const coreFields = {
   email: z.string().trim().max(320).nullable().optional(),
   externalId: z.string().trim().min(1).max(200).nullable().optional(),
   source: z.string().trim().max(200).nullable().optional(),
+  priority: z
+    .enum(["no-priority", "low", "medium", "high", "urgent"])
+    .optional(),
 };
 
-export const createContactBody = z.object(coreFields);
+export const createContactBody = z.object({
+  ...coreFields,
+  targetPoolIds: z.array(z.string().min(1)).max(50).optional(),
+});
 
 export const upsertContactBody = z.object({
   ...coreFields,
   name: coreFields.name.optional().openapi({
     description: "Required when the contact does not exist yet.",
+  }),
+  targetPools: z.array(z.string().min(1).max(100)).max(50).optional().openapi({
+    description:
+      "Pool slugs to add as targets (existing targets are kept). An unknown slug is rejected.",
   }),
 });
 
@@ -92,6 +102,11 @@ export const updateContactBody = z.object({
   email: coreFields.email,
   externalId: coreFields.externalId,
   source: coreFields.source,
+  priority: coreFields.priority,
+});
+
+export const setTargetsBody = z.object({
+  poolIds: z.array(z.string().min(1)).max(50),
 });
 
 export const linkTaskBody = z.object({ taskId: z.string() });
@@ -115,6 +130,9 @@ export const createPoolBody = z.object({
   }),
   description: z.string().trim().max(2000).nullable().optional(),
   icon: z.string().trim().max(100).nullable().optional(),
+  screeningProjectId: z.string().min(1).nullable().optional().openapi({
+    description: "The board people are screened on; its backlog is the queue.",
+  }),
 });
 
 export const updatePoolBody = z.object({
@@ -123,6 +141,7 @@ export const updatePoolBody = z.object({
   description: z.string().trim().max(2000).nullable().optional(),
   icon: z.string().trim().max(100).nullable().optional(),
   position: z.number().int().optional(),
+  screeningProjectId: z.string().min(1).nullable().optional(),
 });
 
 export const createFieldBody = z.object({
@@ -188,7 +207,10 @@ export const bulkIdsBody = z.object({ ids: contactIds });
 
 export const bulkUpdateContactsBody = z.object({
   ids: contactIds,
-  source: z.string().trim().max(200).nullable(),
+  source: z.string().trim().max(200).nullable().optional(),
+  priority: coreFields.priority,
+  addTargetPoolIds: z.array(z.string().min(1)).max(50).optional(),
+  removeTargetPoolIds: z.array(z.string().min(1)).max(50).optional(),
 });
 
 export const bulkMemberValuesBody = z.object({
@@ -211,4 +233,23 @@ export const addToBoardBody = z.object({
   columnId: z.string().min(1).optional().openapi({
     description: "Stage to start in; the board's first stage if omitted.",
   }),
+});
+
+export const projectIdParam = z.object({ projectId: z.string() });
+
+export const replaceStepsBody = z.object({
+  steps: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(200),
+        typebotPublicId: z.string().trim().min(1).max(200).openapi({
+          description: "Public id of the Typebot message flow to start.",
+        }),
+        offsetDays: z.number().int().min(0).max(365).openapi({
+          description: "Days after the task leaves the backlog.",
+        }),
+        enabled: z.boolean().optional(),
+      }),
+    )
+    .max(20),
 });

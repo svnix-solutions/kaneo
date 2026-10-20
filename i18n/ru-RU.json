@@ -3968,7 +3968,13 @@
 			"updated_many": "Updated {{count}} contacts.",
 			"updated_one": "Updated {{count}} contact.",
 			"updated_other": "Updated {{count}} contacts.",
-			"updateError": "Couldn't update {{field}}."
+			"updateError": "Couldn't update {{field}}.",
+			"addTarget": "Add target pool",
+			"priorityPlaceholder": "Set priority…",
+			"targeted_few": "{{pool}} is now a target for {{count}} contacts.",
+			"targeted_many": "{{pool}} is now a target for {{count}} contacts.",
+			"targeted_one": "{{pool}} is now a target for {{count}} contact.",
+			"targeted_other": "{{pool}} is now a target for {{count}} contacts."
 		},
 		"columns": {
 			"created": "Added",
@@ -3979,7 +3985,9 @@
 			"pools": "Pools",
 			"source": "Source",
 			"updated": "Updated",
-			"pipelines": "Pipelines"
+			"pipelines": "Pipelines",
+			"priority": "Priority",
+			"targetPools": "Target pools"
 		},
 		"create": {
 			"creating": "Creating...",
@@ -4121,7 +4129,10 @@
 			"slug": "Slug",
 			"slugHint": "Integrations (like the Typebot glue) find the pool by this.",
 			"slugInvalid": "Use lowercase letters, numbers and dashes.",
-			"updated": "Pool updated."
+			"updated": "Pool updated.",
+			"noScreeningBoard": "No screening board",
+			"screeningBoard": "Screening board",
+			"screeningBoardHint": "Contacts queue in this board's backlog to be screened for the pool."
 		},
 		"searchPlaceholder": "Search name, phone, email or ID…",
 		"showing": "Showing {{shown}} of {{total}}",
@@ -4175,6 +4186,34 @@
 			"stage": "Stage",
 			"startIn": "Start in {{stage}}",
 			"unlink": "Unlink from {{board}}"
-		}
+		},
+		"screening": {
+			"addStep": "Add step",
+			"addToScreening": "Add to screening",
+			"day": "Day",
+			"enabled": "Enabled",
+			"moveDown": "Move down",
+			"moveUp": "Move up",
+			"noSteps": "No message steps yet.",
+			"queued_few": "Queued {{count}} contacts for {{pool}} screening.",
+			"queued_many": "Queued {{count}} contacts for {{pool}} screening.",
+			"queued_one": "Queued {{count}} contact for {{pool}} screening.",
+			"queued_other": "Queued {{count}} contacts for {{pool}} screening.",
+			"queueError": "Couldn't add to the screening backlog.",
+			"removeStep": "Remove step",
+			"saved": "Message steps saved.",
+			"saveError": "Couldn't save the message steps.",
+			"settingsDescription": "Messages sent to contacts screened on {{board}}.",
+			"settingsTitle": "Screening messages",
+			"stepName": "Step name",
+			"stepNamePlaceholder": "Invite",
+			"stepsDescription": "When a contact's task moves from the backlog onto this board, each step starts its Typebot message flow on its day. Steps stop once the task reaches a final stage.",
+			"stepsTitle": "Message steps",
+			"typebot": "Typebot flow",
+			"typebotPlaceholder": "Typebot public id",
+			"variablesNote": "Each flow starts with these variables filled: {{variables}}. Use Send email blocks for email, and an HTTP request to the glue's /messages/whatsapp for WhatsApp.",
+			"webhookNote": "To trigger the steps, add a Generic webhook under this board's Integrations pointing at the glue's /events/kaneo, with “Task status changed” on and the shared secret."
+		},
+		"save": "Save"
 	}
 }

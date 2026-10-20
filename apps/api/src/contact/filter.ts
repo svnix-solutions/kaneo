@@ -2,7 +2,8 @@
 //
 // A filter is a list of conditions joined by all/any. Each condition names a
 // subject -- a contact property, a field of the pool being listed
-// ("field:<id>"), pool membership ("pools", contacts list only) or a board
+// ("field:<id>"), pool membership or target pools ("pools" / "targets",
+// contacts list only), priority, or a board
 // ("board:<projectId>", matched through the contact's linked tasks) -- an
 // operator allowed for that subject's type, and a value.
 import { and, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
@@ -13,6 +14,7 @@ import { assertProjectAccess } from "../project-access/assert-project-access";
 import { escapeLikePattern } from "../search/like-pattern";
 import {
   contactTable,
+  contactTargetPoolTable,
   poolFieldDefinitionTable as fieldTable,
   poolMemberTable,
   poolFieldValueTable as valueTable,
@@ -87,6 +89,8 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 type Subject = {
   kind: Kind;
+  /** For "pools": membership, or the pools a contact is meant for. */
+  link?: typeof poolMemberTable | typeof contactTargetPoolTable;
   label: string;
   expr: SQL;
   projectId?: string;
@@ -186,7 +190,27 @@ async function resolveSubjects(
       };
     }
     if (key === "pools" && !poolId) {
-      return { kind: "pools", label: "pools", expr: sql`` };
+      return {
+        kind: "pools",
+        label: "pools",
+        expr: sql``,
+        link: poolMemberTable,
+      };
+    }
+    if (key === "targets" && !poolId) {
+      return {
+        kind: "pools",
+        label: "targets",
+        expr: sql``,
+        link: contactTargetPoolTable,
+      };
+    }
+    if (key === "priority") {
+      return {
+        kind: "dropdown",
+        label: "priority",
+        expr: sql`${contactTable.priority}`,
+      };
     }
     if (key.startsWith("board:")) {
       const project = byProject.get(key.slice(6));
@@ -367,18 +391,17 @@ function conditionSql(
       }
     }
     case "pools": {
+      const link = subject.link ?? poolMemberTable;
       const inPools = (ids?: string[]) =>
-        sql`EXISTS (SELECT 1 FROM ${poolMemberTable} WHERE ${poolMemberTable.contactId} = ${contactTable.id}${
-          ids
-            ? sql` AND ${poolMemberTable.poolId} = ANY(${textArray(ids)})`
-            : sql``
+        sql`EXISTS (SELECT 1 FROM ${link} WHERE ${link.contactId} = ${contactTable.id}${
+          ids ? sql` AND ${link.poolId} = ANY(${textArray(ids)})` : sql``
         })`;
       const ids = v as string[];
       switch (op) {
         case "any_of":
           return inPools(ids);
         case "all_of":
-          return sql`(SELECT count(DISTINCT ${poolMemberTable.poolId}) FROM ${poolMemberTable} WHERE ${poolMemberTable.contactId} = ${contactTable.id} AND ${poolMemberTable.poolId} = ANY(${textArray(ids)})) = ${new Set(ids).size}`;
+          return sql`(SELECT count(DISTINCT ${link.poolId}) FROM ${link} WHERE ${link.contactId} = ${contactTable.id} AND ${link.poolId} = ANY(${textArray(ids)})) = ${new Set(ids).size}`;
         case "none_of":
           return sql`NOT ${inPools(ids)}`;
         case "empty":

@@ -3,6 +3,7 @@
 import { and, asc, count, desc, eq, inArray, max, type SQL } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../database";
+import { projectTable } from "../database/schema";
 import {
   contactIdsInWorkspace,
   contactSearch,
@@ -38,6 +39,7 @@ function serializePool(p: Pool, memberCount: number) {
     description: p.description,
     icon: p.icon,
     position: p.position,
+    screeningProjectId: p.screeningProjectId,
     memberCount,
     createdAt: p.createdAt.toISOString(),
   };
@@ -89,6 +91,21 @@ export async function getPoolBySlug(workspaceId: string, slug: string) {
   return serializePool(pool, (await memberCounts([pool.id])).get(pool.id) ?? 0);
 }
 
+/** A pool's screening board must be a board of the same workspace. */
+async function assertBoardInWorkspace(
+  workspaceId: string,
+  projectId: string | null | undefined,
+) {
+  if (!projectId) return;
+  const [project] = await db
+    .select({ workspaceId: projectTable.workspaceId })
+    .from(projectTable)
+    .where(eq(projectTable.id, projectId))
+    .limit(1);
+  if (project?.workspaceId !== workspaceId)
+    badRequest("Screening board not found in this workspace");
+}
+
 export function slugify(name: string) {
   return (
     name
@@ -112,8 +129,10 @@ export async function createPool(
     slug?: string;
     description?: string | null;
     icon?: string | null;
+    screeningProjectId?: string | null;
   },
 ) {
+  await assertBoardInWorkspace(workspaceId, body.screeningProjectId);
   const [pos] = await db
     .select({ max: max(poolTable.position) })
     .from(poolTable)
@@ -126,6 +145,7 @@ export async function createPool(
         name: body.name.trim(),
         slug,
         description: body.description?.trim() || null,
+        screeningProjectId: body.screeningProjectId ?? null,
         icon: body.icon?.trim() || null,
         position: (pos?.max ?? 0) + 1,
       })
@@ -154,9 +174,11 @@ export async function updatePool(
     description?: string | null;
     icon?: string | null;
     position?: number;
+    screeningProjectId?: string | null;
   },
 ) {
-  await findPool(id);
+  const pool = await findPool(id);
+  await assertBoardInWorkspace(pool.workspaceId, body.screeningProjectId);
   const patch: Partial<typeof poolTable.$inferInsert> = {};
   if (body.name !== undefined) patch.name = body.name.trim();
   if (body.slug !== undefined) patch.slug = body.slug;
@@ -164,6 +186,8 @@ export async function updatePool(
     patch.description = body.description?.trim() || null;
   if (body.icon !== undefined) patch.icon = body.icon?.trim() || null;
   if (body.position !== undefined) patch.position = body.position;
+  if (body.screeningProjectId !== undefined)
+    patch.screeningProjectId = body.screeningProjectId;
   if (Object.keys(patch).length === 0) return getPool(id);
   try {
     await db.update(poolTable).set(patch).where(eq(poolTable.id, id));

@@ -10,10 +10,13 @@ export type ContactRow = {
   email: string | null;
   externalId: string | null;
   source: string | null;
+  priority?: string;
   createdAt: string;
   updatedAt: string;
   fields?: Record<string, string | null>;
   pools?: { id: string; name: string; slug: string }[];
+  /** Pools the contact is meant for (Contacts page). */
+  targetPools?: { id: string; name: string; slug: string }[];
   /** Pool pages: the member's tasks on pipeline boards. */
   pipelines?: {
     taskId: string;

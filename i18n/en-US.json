@@ -3770,7 +3770,9 @@
 			"updated": "Updated",
 			"created": "Added",
 			"pools": "Pools",
-			"pipelines": "Pipelines"
+			"pipelines": "Pipelines",
+			"priority": "Priority",
+			"targetPools": "Target pools"
 		},
 		"emptyTitle": "No contacts yet",
 		"emptyDescription": "Add a contact, or let a lead source create them.",
@@ -3844,7 +3846,10 @@
 			"emptyTitle": "No one in this pool yet",
 			"emptyDescription": "Add contacts from the Contacts page, or let an enrichment flow add them.",
 			"notFound": "Pool not found",
-			"notFoundDescription": "It may have been deleted, or you don't have access to it."
+			"notFoundDescription": "It may have been deleted, or you don't have access to it.",
+			"screeningBoard": "Screening board",
+			"noScreeningBoard": "No screening board",
+			"screeningBoardHint": "Contacts queue in this board's backlog to be screened for the pool."
 		},
 		"filter": {
 			"button": "Filter",
@@ -3941,7 +3946,11 @@
 			"deleteDescription": "The contacts are removed from every pool, with their pool details. Linked tasks are kept. This can't be undone.",
 			"deleted_one": "Deleted {{count}} contact.",
 			"deleted_other": "Deleted {{count}} contacts.",
-			"deleteError": "Failed to delete contacts."
+			"deleteError": "Failed to delete contacts.",
+			"priorityPlaceholder": "Set priority…",
+			"addTarget": "Add target pool",
+			"targeted_one": "{{pool}} is now a target for {{count}} contact.",
+			"targeted_other": "{{pool}} is now a target for {{count}} contacts."
 		},
 		"task": {
 			"title": "Contacts",
@@ -3983,6 +3992,32 @@
 			"selectNone": "Select none",
 			"addCount_one": "Add {{count}} person",
 			"addCount_other": "Add {{count}} people"
-		}
+		},
+		"screening": {
+			"addToScreening": "Add to screening",
+			"queued_one": "Queued {{count}} contact for {{pool}} screening.",
+			"queued_other": "Queued {{count}} contacts for {{pool}} screening.",
+			"queueError": "Couldn't add to the screening backlog.",
+			"settingsTitle": "Screening messages",
+			"settingsDescription": "Messages sent to contacts screened on {{board}}.",
+			"stepsTitle": "Message steps",
+			"stepsDescription": "When a contact's task moves from the backlog onto this board, each step starts its Typebot message flow on its day. Steps stop once the task reaches a final stage.",
+			"noSteps": "No message steps yet.",
+			"stepName": "Step name",
+			"stepNamePlaceholder": "Invite",
+			"typebot": "Typebot flow",
+			"typebotPlaceholder": "Typebot public id",
+			"day": "Day",
+			"enabled": "Enabled",
+			"moveUp": "Move up",
+			"moveDown": "Move down",
+			"removeStep": "Remove step",
+			"addStep": "Add step",
+			"saved": "Message steps saved.",
+			"saveError": "Couldn't save the message steps.",
+			"variablesNote": "Each flow starts with these variables filled: {{variables}}. Use Send email blocks for email, and an HTTP request to the glue's /messages/whatsapp for WhatsApp.",
+			"webhookNote": "To trigger the steps, add a Generic webhook under this board's Integrations pointing at the glue's /events/kaneo, with “Task status changed” on and the shared secret."
+		},
+		"save": "Save"
 	}
 }

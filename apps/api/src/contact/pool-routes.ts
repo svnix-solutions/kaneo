@@ -14,6 +14,7 @@ import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { contactAccess } from "./access";
 import * as fields from "./fields";
 import * as pipelines from "./pipelines";
+import * as screening from "./screening";
 import * as svc from "./pools";
 import {
   addToBoardBody,
@@ -422,6 +423,25 @@ const unlinkMemberTaskRoute = createRoute({
   responses: { 200: jsonResponse("Unlinked", successSchema) },
 });
 
+const addToScreeningRoute = createRoute({
+  method: "post",
+  operationId: "addContactsToScreening",
+  path: "/{poolId}/bulk/add-to-screening",
+  tags,
+  summary: "Queue contacts in the pool's screening backlog",
+  description:
+    "One backlog task per contact on the pool's screening board (with the contact's priority), linked to the contact. Contacts already on that board are skipped.",
+  middleware: [
+    contactAccess.fromPool(),
+    requireWorkspacePermission({ task: ["create"] }),
+  ] as const,
+  request: { params: poolIdParam, body: json(bulkIdsBody) },
+  responses: {
+    200: jsonResponse("Queued", addToBoardResponseSchema),
+    400: errorResponse("The pool has no screening board"),
+  },
+});
+
 const pool = apiRouter()
   .openapi(listRoute, async (c) =>
     c.json(await svc.listPools(c.req.valid("param").workspaceId), 200),
@@ -439,6 +459,16 @@ const pool = apiRouter()
     const { workspaceId, slug } = c.req.valid("param");
     return c.json(await svc.getPoolBySlug(workspaceId, slug), 200);
   })
+  .openapi(addToScreeningRoute, async (c) =>
+    c.json(
+      await screening.addToScreening(
+        c.req.valid("param").poolId,
+        c.get("userId"),
+        c.req.valid("json").ids,
+      ),
+      200,
+    ),
+  )
   .openapi(taskMembersRoute, async (c) =>
     c.json(await pipelines.listTaskMembers(c.req.valid("param").taskId), 200),
   )

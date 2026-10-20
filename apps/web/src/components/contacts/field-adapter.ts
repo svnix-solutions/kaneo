@@ -54,6 +54,16 @@ export function textField(
   };
 }
 
+/** A synthetic choice field (dropdown or multiselect) over labels. */
+export function choiceField(
+  id: string,
+  name: string,
+  type: "dropdown" | "multiselect",
+  options: string[],
+): CustomFieldDefinition {
+  return { ...textField(id, name), type, options };
+}
+
 /** Editor output (a stored string) to the values API input. */
 export function toValueInput(
   field: CustomFieldDefinition,

@@ -74,6 +74,7 @@ describe("buildSettingsNav", () => {
       "/dashboard/settings/projects/p1/visibility",
       "/dashboard/settings/projects/p1/integrations",
       "/dashboard/settings/projects/p1/calendar",
+      "/dashboard/settings/projects/p1/screening", // fork: contacts
     ]);
     expect(nav.projects[0]?.links[2]?.label).toBe(
       "settings:projectCustomFields.title",
