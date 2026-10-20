@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { AddFromPoolButton } from "@/components/pools/add-from-pool"; // fork: contacts
 import { DisplayMenu } from "@/components/project/display/display-menu";
 import { FilterMenu } from "@/components/project/task-filters/filter-menu";
 import { useFilterShortcuts } from "@/components/project/task-filters/use-filter-shortcuts";
@@ -26,6 +27,7 @@ export function ProjectToolbar({
           <span className="mx-1 h-4 w-px bg-border" aria-hidden="true" />
         </>
       )}
+      <AddFromPoolButton /> {/* fork: contacts */}
       <ProjectSearch value={view.search} onChange={view.setSearch} />
       <FilterMenu
         subjects={view.subjects}

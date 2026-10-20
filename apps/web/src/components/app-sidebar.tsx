@@ -4,6 +4,7 @@ import { useEffect } from "react";
 
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
+import { NavPools } from "@/components/pools/nav-pools"; // fork: contacts
 import { NavSecondary } from "@/components/nav-secondary";
 import { ThemeToggleDropdown } from "@/components/theme-toggle-dropdown";
 import { TrialCard } from "@/components/trial-card";
@@ -40,6 +41,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="overflow-hidden gap-1 py-1">
         <NavMain />
         <NavProjects />
+        <NavPools /> {/* fork: contacts */}
       </SidebarContent>
       <SidebarFooter>
         <NavSecondary />
