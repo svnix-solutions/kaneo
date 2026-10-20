@@ -3796,7 +3796,8 @@
 			"phone": "Phone",
 			"pools": "Pools",
 			"source": "Source",
-			"updated": "Updated"
+			"updated": "Updated",
+			"pipelines": "Pipelines"
 		},
 		"create": {
 			"creating": "Creating...",
@@ -3953,6 +3954,35 @@
 			"title": "Contacts",
 			"unlink": "Unlink contact",
 			"unlinkError": "Couldn't unlink contact."
+		},
+		"pipelines": {
+			"add": "Add to board",
+			"addCount_one": "Add {{count}} person",
+			"addCount_other": "Add {{count}} people",
+			"added_one": "Added {{count}} person to {{board}}.",
+			"added_other": "Added {{count}} people to {{board}}.",
+			"addedFromPool_one": "Added {{count}} person from {{pool}}.",
+			"addedFromPool_other": "Added {{count}} people from {{pool}}.",
+			"addError": "Couldn't add to the board.",
+			"addFromPool": "Add from pool",
+			"addFromPoolDescription": "Pick people from a pool. Each gets a task on this board, linked to their place in the pool.",
+			"addTitle_one": "Put {{count}} person on a board",
+			"addTitle_other": "Put {{count}} people on a board",
+			"addToBoard": "Add to board",
+			"alreadyOnBoard": "Already on this board",
+			"board": "Board",
+			"chooseBoard": "Choose a board…",
+			"chooseStage": "Choose a stage…",
+			"loading": "Loading…",
+			"noMembers": "No one in this pool matches.",
+			"none": "Not on any board yet.",
+			"selectAllShown": "Select all {{count}} shown",
+			"selectNone": "Select none",
+			"skipped_one": "{{count}} was already on that board.",
+			"skipped_other": "{{count}} were already on that board.",
+			"stage": "Stage",
+			"startIn": "Start in {{stage}}",
+			"unlink": "Unlink from {{board}}"
 		}
 	}
 }

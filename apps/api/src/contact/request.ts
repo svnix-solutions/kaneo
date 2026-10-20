@@ -198,3 +198,17 @@ export const bulkMemberValuesBody = z.object({
       "Pool field values by field name (case-insensitive), set on every listed member; null clears.",
   }),
 });
+
+export const memberTaskParam = z.object({
+  poolId: z.string(),
+  contactId: z.string(),
+  taskId: z.string(),
+});
+
+export const addToBoardBody = z.object({
+  ids: contactIds,
+  projectId: z.string().min(1),
+  columnId: z.string().min(1).optional().openapi({
+    description: "Stage to start in; the board's first stage if omitted.",
+  }),
+});

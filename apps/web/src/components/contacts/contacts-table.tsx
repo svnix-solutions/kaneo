@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { CustomFieldDefinition } from "@/components/project/custom-fields/types";
@@ -31,6 +32,9 @@ type ContactsTableProps = {
   fields?: CustomFieldDefinition[];
   /** Show which pools each contact is in (Contacts page). */
   showPools?: boolean;
+  /** Show each member's pipeline tasks (pool pages); links need the workspace. */
+  showPipelines?: boolean;
+  workspaceId: string;
   isLoading: boolean;
   onOpen: (contactId: string) => void;
   /** Omit to hide the selection column. */
@@ -47,6 +51,8 @@ export function ContactsTable({
   contacts,
   fields = [],
   showPools = false,
+  showPipelines = false,
+  workspaceId,
   isLoading,
   onOpen,
   selection,
@@ -109,6 +115,11 @@ export function ContactsTable({
               {t("contacts:columns.pools")}
             </TableHead>
           ) : null}
+          {showPipelines ? (
+            <TableHead className="whitespace-nowrap font-medium text-foreground">
+              {t("contacts:columns.pipelines")}
+            </TableHead>
+          ) : null}
           {fields.map((field) => (
             <TableHead
               key={field.id}
@@ -129,7 +140,7 @@ export function ContactsTable({
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                 ))}
-                {showPools ? (
+                {showPools || showPipelines ? (
                   <TableCell className="py-3">
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
@@ -197,6 +208,38 @@ export function ContactsTable({
                         <Badge key={pool.id} variant="outline">
                           {pool.name}
                         </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                ) : null}
+                {showPipelines ? (
+                  <TableCell className="py-3">
+                    <div className="flex max-w-72 flex-wrap gap-1">
+                      {(contact.pipelines ?? []).map((pipeline) => (
+                        <Link
+                          key={pipeline.taskId}
+                          to="/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId"
+                          params={{
+                            workspaceId,
+                            projectId: pipeline.projectId,
+                            taskId: pipeline.taskId,
+                          }}
+                          onClick={stop}
+                          onKeyDown={stop}
+                          title={`${pipeline.projectName} · ${pipeline.columnName ?? ""}`}
+                        >
+                          <Badge
+                            variant={pipeline.isFinal ? "secondary" : "outline"}
+                            className="max-w-56 hover:bg-accent"
+                          >
+                            <span className="truncate">
+                              {pipeline.projectName}
+                              {pipeline.columnName
+                                ? ` · ${pipeline.columnName}`
+                                : ""}
+                            </span>
+                          </Badge>
+                        </Link>
                       ))}
                     </div>
                   </TableCell>

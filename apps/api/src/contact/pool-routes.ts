@@ -13,32 +13,41 @@ import { requireWorkspacePermission } from "../utils/require-workspace-permissio
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { contactAccess } from "./access";
 import * as fields from "./fields";
+import * as pipelines from "./pipelines";
 import * as svc from "./pools";
 import {
+  addToBoardBody,
   bulkIdsBody,
   bulkMemberValuesBody,
   createFieldBody,
   createPoolBody,
   fieldIdParam,
+  linkTaskBody,
+  memberTaskParam,
   poolExternalParam,
   poolIdParam,
   poolMemberParam,
   poolSlugParam,
   queryBody,
   setMemberValuesBody,
+  taskIdParam,
   updateFieldBody,
   updatePoolBody,
   workspaceIdParam,
 } from "./request";
 import {
+  addToBoardResponseSchema,
   bulkAddResponseSchema,
   bulkRemoveResponseSchema,
   bulkUpdateResponseSchema,
+  memberLinkResponseSchema,
+  pipelineSchema,
   poolFieldDefinitionSchema,
   poolMemberListSchema,
   poolMemberUpsertSchema,
   poolSchema,
   successSchema,
+  taskPoolMemberSchema,
 } from "./response";
 
 const tags = ["Pools"];
@@ -330,6 +339,89 @@ const bulkUpdateRoute = createRoute({
   },
 });
 
+const taskMembersRoute = createRoute({
+  method: "get",
+  operationId: "getTaskPoolMembers",
+  path: "/task/{taskId}/members",
+  tags,
+  summary: "Pool members linked to a task",
+  middleware: [
+    workspaceAccess.fromTaskId("taskId"),
+    requireWorkspacePermission({ task: ["read"] }),
+  ] as const,
+  request: { params: taskIdParam },
+  responses: {
+    200: jsonResponse("Members", z.array(taskPoolMemberSchema)),
+    404: errorResponse("Task not found"),
+  },
+});
+
+const addToBoardRoute = createRoute({
+  method: "post",
+  operationId: "addPoolMembersToBoard",
+  path: "/{poolId}/bulk/add-to-board",
+  tags,
+  summary: "Put members on a pipeline board",
+  description:
+    "Creates one task per member in the given stage (the board's first by default), linked to the member. Members already on that board are skipped.",
+  middleware: [
+    contactAccess.fromPool(),
+    requireWorkspacePermission({ task: ["create"] }),
+  ] as const,
+  request: { params: poolIdParam, body: json(addToBoardBody) },
+  responses: {
+    200: jsonResponse("Added", addToBoardResponseSchema),
+    400: errorResponse("Board or stage not found, or a required board field"),
+    403: errorResponse("No access to the board"),
+  },
+});
+
+const memberTasksRoute = createRoute({
+  method: "get",
+  operationId: "getPoolMemberTasks",
+  path: "/{poolId}/members/{contactId}/tasks",
+  tags,
+  summary: "A member's pipeline tasks",
+  middleware: [
+    contactAccess.fromPool(),
+    requireWorkspacePermission({ task: ["read"] }),
+  ] as const,
+  request: { params: poolMemberParam },
+  responses: { 200: jsonResponse("Tasks", z.array(pipelineSchema)) },
+});
+
+const linkMemberTaskRoute = createRoute({
+  method: "post",
+  operationId: "linkPoolMemberTask",
+  path: "/{poolId}/members/{contactId}/tasks",
+  tags,
+  summary: "Link a task to a member",
+  middleware: [
+    contactAccess.fromPool(),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: poolMemberParam, body: json(linkTaskBody) },
+  responses: {
+    200: jsonResponse("Link", memberLinkResponseSchema),
+    400: errorResponse("Different workspace"),
+    404: errorResponse("Not a member"),
+  },
+});
+
+const unlinkMemberTaskRoute = createRoute({
+  method: "delete",
+  operationId: "unlinkPoolMemberTask",
+  path: "/{poolId}/members/{contactId}/tasks/{taskId}",
+  tags,
+  summary: "Unlink a task from a member",
+  middleware: [
+    contactAccess.fromPool(),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: memberTaskParam },
+  responses: { 200: jsonResponse("Unlinked", successSchema) },
+});
+
 const pool = apiRouter()
   .openapi(listRoute, async (c) =>
     c.json(await svc.listPools(c.req.valid("param").workspaceId), 200),
@@ -346,6 +438,50 @@ const pool = apiRouter()
   .openapi(bySlugRoute, async (c) => {
     const { workspaceId, slug } = c.req.valid("param");
     return c.json(await svc.getPoolBySlug(workspaceId, slug), 200);
+  })
+  .openapi(taskMembersRoute, async (c) =>
+    c.json(await pipelines.listTaskMembers(c.req.valid("param").taskId), 200),
+  )
+  .openapi(addToBoardRoute, async (c) =>
+    c.json(
+      await pipelines.addMembersToBoard(
+        c.req.valid("param").poolId,
+        c.get("userId"),
+        c.req.valid("json"),
+      ),
+      200,
+    ),
+  )
+  .openapi(memberTasksRoute, async (c) => {
+    const { poolId, contactId } = c.req.valid("param");
+    return c.json(
+      await pipelines.listMemberTasks(poolId, contactId, c.get("userId")),
+      200,
+    );
+  })
+  .openapi(linkMemberTaskRoute, async (c) => {
+    const { poolId, contactId } = c.req.valid("param");
+    return c.json(
+      await pipelines.linkMemberTask(
+        poolId,
+        contactId,
+        c.req.valid("json").taskId,
+        c.get("userId"),
+      ),
+      200,
+    );
+  })
+  .openapi(unlinkMemberTaskRoute, async (c) => {
+    const { poolId, contactId, taskId } = c.req.valid("param");
+    return c.json(
+      await pipelines.unlinkMemberTask(
+        poolId,
+        contactId,
+        taskId,
+        c.get("userId"),
+      ),
+      200,
+    );
   })
   .openapi(updateFieldRoute, async (c) =>
     c.json(

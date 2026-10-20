@@ -23,6 +23,7 @@ import {
   writeValues,
 } from "./fields";
 import { buildContactFilter, type ContactFilter } from "./filter";
+import { pipelinesFor } from "./pipelines";
 import { contactTable, poolMemberTable, poolTable } from "./schema";
 
 type Pool = typeof poolTable.$inferSelect;
@@ -200,6 +201,7 @@ async function pageOfMembers(
   where: SQL | undefined,
   limit: number,
   offset: number,
+  userId: string,
 ) {
   const [rows, [totalRow]] = await Promise.all([
     db
@@ -216,11 +218,16 @@ async function pageOfMembers(
       .innerJoin(contactTable, eq(contactTable.id, poolMemberTable.contactId))
       .where(where),
   ]);
-  const values = await valuesFor(rows.map((r) => r.member.id));
+  const memberIds = rows.map((r) => r.member.id);
+  const [values, pipelines] = await Promise.all([
+    valuesFor(memberIds),
+    pipelinesFor(memberIds, userId),
+  ]);
   return {
-    items: rows.map((r) =>
-      serializeMember(r.contact, r.member, values.get(r.member.id) ?? {}),
-    ),
+    items: rows.map((r) => ({
+      ...serializeMember(r.contact, r.member, values.get(r.member.id) ?? {}),
+      pipelines: pipelines.get(r.member.id) ?? [],
+    })),
     total: totalRow?.total ?? 0,
   };
 }
@@ -243,6 +250,7 @@ export async function queryMembers(
     ),
     body.limit,
     body.offset,
+    userId,
   );
 }
 

@@ -1,0 +1,729 @@
+{
+	"id": "35a59878-a7de-43a8-b99b-a653b21a5cd9",
+	"prevId": "226af286-d98d-414b-b792-2ccda91346eb",
+	"version": "7",
+	"dialect": "postgresql",
+	"tables": {
+		"public.contact": {
+			"name": "contact",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"phone": {
+					"name": "phone",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"email": {
+					"name": "email",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"external_id": {
+					"name": "external_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"source": {
+					"name": "source",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"contact_workspace_name_idx": {
+					"name": "contact_workspace_name_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "name",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"contact_workspace_phone_idx": {
+					"name": "contact_workspace_phone_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "phone",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				},
+				"contact_workspace_email_idx": {
+					"name": "contact_workspace_email_idx",
+					"columns": [
+						{
+							"expression": "workspace_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "email",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"contact_workspace_id_workspace_id_fk": {
+					"name": "contact_workspace_id_workspace_id_fk",
+					"tableFrom": "contact",
+					"tableTo": "workspace",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"contact_workspace_external_id_unique": {
+					"name": "contact_workspace_external_id_unique",
+					"nullsNotDistinct": false,
+					"columns": ["workspace_id", "external_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.pool_field_definition": {
+			"name": "pool_field_definition",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"pool_id": {
+					"name": "pool_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"type": {
+					"name": "type",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"required": {
+					"name": "required",
+					"type": "boolean",
+					"primaryKey": false,
+					"notNull": true,
+					"default": false
+				},
+				"default_value": {
+					"name": "default_value",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"options": {
+					"name": "options",
+					"type": "jsonb",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"pool_field_def_pool_name_unique": {
+					"name": "pool_field_def_pool_name_unique",
+					"columns": [
+						{
+							"expression": "pool_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						},
+						{
+							"expression": "lower(\"name\")",
+							"asc": true,
+							"isExpression": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": true,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"pool_field_definition_pool_id_pool_id_fk": {
+					"name": "pool_field_definition_pool_id_pool_id_fk",
+					"tableFrom": "pool_field_definition",
+					"tableTo": "pool",
+					"columnsFrom": ["pool_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.pool_field_value": {
+			"name": "pool_field_value",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"member_id": {
+					"name": "member_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"field_id": {
+					"name": "field_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"value": {
+					"name": "value",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"pool_field_value_fieldId_idx": {
+					"name": "pool_field_value_fieldId_idx",
+					"columns": [
+						{
+							"expression": "field_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"pool_field_value_member_id_pool_member_id_fk": {
+					"name": "pool_field_value_member_id_pool_member_id_fk",
+					"tableFrom": "pool_field_value",
+					"tableTo": "pool_member",
+					"columnsFrom": ["member_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"pool_field_value_field_id_pool_field_definition_id_fk": {
+					"name": "pool_field_value_field_id_pool_field_definition_id_fk",
+					"tableFrom": "pool_field_value",
+					"tableTo": "pool_field_definition",
+					"columnsFrom": ["field_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"pool_field_value_member_field_unique": {
+					"name": "pool_field_value_member_field_unique",
+					"nullsNotDistinct": false,
+					"columns": ["member_id", "field_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.pool_member": {
+			"name": "pool_member",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"pool_id": {
+					"name": "pool_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"contact_id": {
+					"name": "contact_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"pool_member_contactId_idx": {
+					"name": "pool_member_contactId_idx",
+					"columns": [
+						{
+							"expression": "contact_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"pool_member_pool_id_pool_id_fk": {
+					"name": "pool_member_pool_id_pool_id_fk",
+					"tableFrom": "pool_member",
+					"tableTo": "pool",
+					"columnsFrom": ["pool_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"pool_member_contact_id_contact_id_fk": {
+					"name": "pool_member_contact_id_contact_id_fk",
+					"tableFrom": "pool_member",
+					"tableTo": "contact",
+					"columnsFrom": ["contact_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"pool_member_pool_contact_unique": {
+					"name": "pool_member_pool_contact_unique",
+					"nullsNotDistinct": false,
+					"columns": ["pool_id", "contact_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.pool": {
+			"name": "pool",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"workspace_id": {
+					"name": "workspace_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"name": {
+					"name": "name",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"slug": {
+					"name": "slug",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"description": {
+					"name": "description",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"icon": {
+					"name": "icon",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"position": {
+					"name": "position",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {
+				"pool_workspace_id_workspace_id_fk": {
+					"name": "pool_workspace_id_workspace_id_fk",
+					"tableFrom": "pool",
+					"tableTo": "workspace",
+					"columnsFrom": ["workspace_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"pool_workspace_slug_unique": {
+					"name": "pool_workspace_slug_unique",
+					"nullsNotDistinct": false,
+					"columns": ["workspace_id", "slug"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.task_contact": {
+			"name": "task_contact",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"task_id": {
+					"name": "task_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"contact_id": {
+					"name": "contact_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"task_contact_contactId_idx": {
+					"name": "task_contact_contactId_idx",
+					"columns": [
+						{
+							"expression": "contact_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"task_contact_task_id_task_id_fk": {
+					"name": "task_contact_task_id_task_id_fk",
+					"tableFrom": "task_contact",
+					"tableTo": "task",
+					"columnsFrom": ["task_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_contact_contact_id_contact_id_fk": {
+					"name": "task_contact_contact_id_contact_id_fk",
+					"tableFrom": "task_contact",
+					"tableTo": "contact",
+					"columnsFrom": ["contact_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_contact_created_by_user_id_fk": {
+					"name": "task_contact_created_by_user_id_fk",
+					"tableFrom": "task_contact",
+					"tableTo": "user",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"task_contact_task_contact_unique": {
+					"name": "task_contact_task_contact_unique",
+					"nullsNotDistinct": false,
+					"columns": ["task_id", "contact_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.task_pool_member": {
+			"name": "task_pool_member",
+			"schema": "",
+			"columns": {
+				"id": {
+					"name": "id",
+					"type": "text",
+					"primaryKey": true,
+					"notNull": true
+				},
+				"task_id": {
+					"name": "task_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"member_id": {
+					"name": "member_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"created_by": {
+					"name": "created_by",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "(now() AT TIME ZONE 'utc')"
+				}
+			},
+			"indexes": {
+				"task_pool_member_memberId_idx": {
+					"name": "task_pool_member_memberId_idx",
+					"columns": [
+						{
+							"expression": "member_id",
+							"isExpression": false,
+							"asc": true,
+							"nulls": "last"
+						}
+					],
+					"isUnique": false,
+					"concurrently": false,
+					"method": "btree",
+					"with": {}
+				}
+			},
+			"foreignKeys": {
+				"task_pool_member_task_id_task_id_fk": {
+					"name": "task_pool_member_task_id_task_id_fk",
+					"tableFrom": "task_pool_member",
+					"tableTo": "task",
+					"columnsFrom": ["task_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_pool_member_member_id_pool_member_id_fk": {
+					"name": "task_pool_member_member_id_pool_member_id_fk",
+					"tableFrom": "task_pool_member",
+					"tableTo": "pool_member",
+					"columnsFrom": ["member_id"],
+					"columnsTo": ["id"],
+					"onDelete": "cascade",
+					"onUpdate": "cascade"
+				},
+				"task_pool_member_created_by_user_id_fk": {
+					"name": "task_pool_member_created_by_user_id_fk",
+					"tableFrom": "task_pool_member",
+					"tableTo": "user",
+					"columnsFrom": ["created_by"],
+					"columnsTo": ["id"],
+					"onDelete": "set null",
+					"onUpdate": "cascade"
+				}
+			},
+			"compositePrimaryKeys": {},
+			"uniqueConstraints": {
+				"task_pool_member_task_member_unique": {
+					"name": "task_pool_member_task_member_unique",
+					"nullsNotDistinct": false,
+					"columns": ["task_id", "member_id"]
+				}
+			},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		}
+	},
+	"enums": {},
+	"schemas": {},
+	"sequences": {},
+	"roles": {},
+	"policies": {},
+	"views": {},
+	"_meta": {
+		"columns": {},
+		"schemas": {},
+		"tables": {}
+	}
+}

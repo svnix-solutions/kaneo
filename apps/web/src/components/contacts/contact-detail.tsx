@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { FolderPlus, Trash2, UserMinus } from "lucide-react";
+import { FolderPlus, Kanban, Trash2, UserMinus, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CustomFieldRow } from "@/components/custom-fields/custom-field-row";
+import { AddToBoardPopover } from "@/components/pools/add-to-board-popover";
 import { errorMessage } from "@/components/project/error-message";
 import { ConfirmDialog } from "@/components/settings/confirm-dialog";
 import { SectionHeader } from "@/components/task/sections/section-header";
@@ -14,7 +15,9 @@ import useDeleteContact from "@/hooks/mutations/contact/use-delete-contact";
 import useUpdateContact from "@/hooks/mutations/contact/use-update-contact";
 import useRemovePoolMember from "@/hooks/mutations/pool/use-remove-pool-member";
 import useUpsertPoolMember from "@/hooks/mutations/pool/use-upsert-pool-member";
+import useUnlinkPoolMemberTask from "@/hooks/mutations/pool/use-unlink-pool-member-task";
 import useGetContactPools from "@/hooks/queries/contact/use-get-contact-pools";
+import useGetPoolMemberTasks from "@/hooks/queries/pool/use-get-pool-member-tasks";
 import useGetPoolFields from "@/hooks/queries/pool/use-get-pool-fields";
 import useGetPools from "@/hooks/queries/pool/use-get-pools";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -287,6 +290,12 @@ function PoolSection({
           ))}
         </div>
       )}
+      <MemberPipelines
+        poolId={pool.id}
+        contactId={contactId}
+        workspaceId={workspaceId}
+        canEdit={canEdit}
+      />
       <ConfirmDialog
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
@@ -298,5 +307,92 @@ function PoolSection({
         onConfirm={() => void handleRemove()}
       />
     </section>
+  );
+}
+
+/** The member's tasks on pipeline boards, and a way onto another board. */
+function MemberPipelines({
+  poolId,
+  contactId,
+  workspaceId,
+  canEdit,
+}: {
+  poolId: string;
+  contactId: string;
+  workspaceId: string;
+  canEdit: boolean;
+}) {
+  const { t } = useTranslation();
+  const { canCreateTasks } = useWorkspacePermission();
+  const { data: pipelines = [] } = useGetPoolMemberTasks(poolId, contactId);
+  const { mutate: unlink } = useUnlinkPoolMemberTask();
+
+  return (
+    <div className="mt-2 flex flex-col gap-1 ps-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-medium text-muted-foreground text-xs">
+          {t("contacts:columns.pipelines")}
+        </p>
+        {canCreateTasks() ? (
+          <AddToBoardPopover
+            workspaceId={workspaceId}
+            poolId={poolId}
+            ids={[contactId]}
+            trigger={
+              <Button
+                variant="ghost"
+                size="xs"
+                className="gap-1 text-muted-foreground"
+              >
+                <Kanban className="size-3" />
+                {t("contacts:pipelines.addToBoard")}
+              </Button>
+            }
+          />
+        ) : null}
+      </div>
+      {pipelines.length === 0 ? (
+        <p className="text-muted-foreground text-xs">
+          {t("contacts:pipelines.none")}
+        </p>
+      ) : (
+        pipelines.map((pipeline) => (
+          <div
+            key={pipeline.taskId}
+            className="group flex items-center gap-2 rounded-md px-1 py-1 text-sm hover:bg-accent/50"
+          >
+            <Kanban className="size-3.5 shrink-0 text-muted-foreground" />
+            <Link
+              to="/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId"
+              params={{
+                workspaceId,
+                projectId: pipeline.projectId,
+                taskId: pipeline.taskId,
+              }}
+              className="min-w-0 flex-1 truncate hover:underline"
+            >
+              {pipeline.projectName}
+            </Link>
+            <span className="shrink-0 text-muted-foreground text-xs">
+              {pipeline.columnName}
+            </span>
+            {canEdit ? (
+              <button
+                type="button"
+                aria-label={t("contacts:pipelines.unlink", {
+                  board: pipeline.projectName,
+                })}
+                onClick={() =>
+                  unlink({ poolId, contactId, taskId: pipeline.taskId })
+                }
+                className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
+        ))
+      )}
+    </div>
   );
 }

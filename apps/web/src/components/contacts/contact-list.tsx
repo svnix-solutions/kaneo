@@ -218,6 +218,8 @@ export function ContactList({ workspaceId, pool }: ContactListProps) {
               contacts={rows}
               fields={fields}
               showPools={!pool}
+              showPipelines={!!pool}
+              workspaceId={workspaceId}
               isLoading={isLoading}
               onOpen={openContact}
               selection={{ selected: selectedIds, onChange: setSelectedIds }}

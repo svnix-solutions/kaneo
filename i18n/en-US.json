@@ -3769,7 +3769,8 @@
 			"source": "Source",
 			"updated": "Updated",
 			"created": "Added",
-			"pools": "Pools"
+			"pools": "Pools",
+			"pipelines": "Pipelines"
 		},
 		"emptyTitle": "No contacts yet",
 		"emptyDescription": "Add a contact, or let a lead source create them.",
@@ -3953,6 +3954,35 @@
 			"unlink": "Unlink contact",
 			"linkError": "Couldn't link contact.",
 			"unlinkError": "Couldn't unlink contact."
+		},
+		"pipelines": {
+			"addToBoard": "Add to board",
+			"addTitle_one": "Put {{count}} person on a board",
+			"addTitle_other": "Put {{count}} people on a board",
+			"board": "Board",
+			"stage": "Stage",
+			"chooseBoard": "Choose a board…",
+			"chooseStage": "Choose a stage…",
+			"startIn": "Start in {{stage}}",
+			"add": "Add to board",
+			"added_one": "Added {{count}} person to {{board}}.",
+			"added_other": "Added {{count}} people to {{board}}.",
+			"skipped_one": "{{count}} was already on that board.",
+			"skipped_other": "{{count}} were already on that board.",
+			"addError": "Couldn't add to the board.",
+			"none": "Not on any board yet.",
+			"unlink": "Unlink from {{board}}",
+			"addFromPool": "Add from pool",
+			"addFromPoolDescription": "Pick people from a pool. Each gets a task on this board, linked to their place in the pool.",
+			"addedFromPool_one": "Added {{count}} person from {{pool}}.",
+			"addedFromPool_other": "Added {{count}} people from {{pool}}.",
+			"loading": "Loading…",
+			"noMembers": "No one in this pool matches.",
+			"alreadyOnBoard": "Already on this board",
+			"selectAllShown": "Select all {{count}} shown",
+			"selectNone": "Select none",
+			"addCount_one": "Add {{count}} person",
+			"addCount_other": "Add {{count}} people"
 		}
 	}
 }

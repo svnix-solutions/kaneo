@@ -1,4 +1,4 @@
-import { Download, FolderPlus, Trash2, UserMinus } from "lucide-react";
+import { Download, FolderPlus, Kanban, Trash2, UserMinus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { barButtonClass } from "@/components/bulk-selection/bar-button-class";
@@ -8,6 +8,7 @@ import { BulkOptionPopover } from "@/components/bulk-selection/bulk-option-popov
 import { toolbarPresenceClass } from "@/components/bulk-selection/toolbar-presence-class";
 import { useBulkSelectionKeys } from "@/components/bulk-selection/use-bulk-selection-keys";
 import { useToolbarPresence } from "@/components/bulk-selection/use-toolbar-presence";
+import { AddToBoardPopover } from "@/components/pools/add-to-board-popover";
 import { errorMessage } from "@/components/project/error-message";
 import type { CustomFieldDefinition } from "@/components/project/custom-fields/types";
 import { ConfirmDialog } from "@/components/settings/confirm-dialog";
@@ -49,7 +50,8 @@ export function BulkBar({
   const { t } = useTranslation();
   const { mounted, hidden, displayCount } = useToolbarPresence(selected.length);
   useBulkSelectionKeys({ selectAll, clearSelection });
-  const { canUpdateTasks, canDeleteTasks } = useWorkspacePermission();
+  const { canCreateTasks, canUpdateTasks, canDeleteTasks } =
+    useWorkspacePermission();
   const canEdit = canUpdateTasks();
   // Deleting a contact removes the person everywhere; only offered on Contacts.
   const canDelete = canDeleteTasks() && !pool;
@@ -160,6 +162,7 @@ export function BulkBar({
     .filter((p) => p.id !== pool?.id)
     .map((p) => ({ value: p.id, label: p.name }));
   const exportLabel = t("contacts:bulk.export");
+  const boardLabel = t("contacts:pipelines.addToBoard");
   const removeLabel = t("contacts:bulk.remove");
   const deleteLabel = t("contacts:bulk.delete");
 
@@ -187,6 +190,20 @@ export function BulkBar({
               placeholder={t("contacts:bulk.poolPlaceholder")}
               options={otherPools}
               onSelect={(poolId) => void addToPool(poolId)}
+            />
+          )}
+          {pool && canCreateTasks() && (
+            <AddToBoardPopover
+              workspaceId={workspaceId}
+              poolId={pool.id}
+              ids={ids}
+              side="top"
+              trigger={
+                <button type="button" className={barButtonClass}>
+                  <Kanban />
+                  <span className="max-lg:sr-only">{boardLabel}</span>
+                </button>
+              }
             />
           )}
           <BarTooltip label={exportLabel}>

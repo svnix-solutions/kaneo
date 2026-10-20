@@ -59,6 +59,20 @@ const fieldValues = z.record(z.string(), z.string().nullable()).openapi({
   description: "Pool field values keyed by field id.",
 });
 
+// A pool member's task on a pipeline board.
+export const pipelineSchema = z
+  .object({
+    taskId: z.string(),
+    number: z.number().nullable(),
+    title: z.string(),
+    projectId: z.string(),
+    projectName: z.string(),
+    columnName: z.string().nullable(),
+    isFinal: z.boolean(),
+    linkedAt: z.string(),
+  })
+  .openapi("PoolMemberPipeline");
+
 // A contact as a row of a pool: the contact's own properties (id is the
 // contact id) plus the membership and its field values.
 export const poolMemberSchema = contactSchema
@@ -72,8 +86,27 @@ export const poolMemberSchema = contactSchema
   .openapi("PoolMember");
 
 export const poolMemberListSchema = z.object({
-  items: z.array(poolMemberSchema),
+  items: z.array(
+    poolMemberSchema.extend({ pipelines: z.array(pipelineSchema) }),
+  ),
   total: z.number(),
+});
+
+export const taskPoolMemberSchema = contactSchema
+  .omit({ pools: true })
+  .extend({ memberId: z.string(), pool: poolRefSchema })
+  .openapi("TaskPoolMember");
+
+export const addToBoardResponseSchema = z.object({
+  added: z.number(),
+  skipped: z.number(),
+  taskIds: z.array(z.string()),
+});
+
+export const memberLinkResponseSchema = z.object({
+  taskId: z.string(),
+  memberId: z.string(),
+  created: z.boolean(),
 });
 
 export const poolMemberUpsertSchema = poolMemberSchema.extend({

@@ -17,6 +17,7 @@ import {
   poolMemberTable,
   poolFieldValueTable as valueTable,
   taskContactTable,
+  taskPoolMemberTable,
 } from "./schema";
 import type { FILTER_OPERATORS } from "./request";
 
@@ -84,7 +85,13 @@ const CORE_DATE = {
 const NUMERIC_RE = "^\\s*-?(\\d+\\.?\\d*|\\.\\d+)([eE][-+]?\\d+)?\\s*$";
 const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-type Subject = { kind: Kind; label: string; expr: SQL; projectId?: string };
+type Subject = {
+  kind: Kind;
+  label: string;
+  expr: SQL;
+  projectId?: string;
+  poolScoped?: boolean;
+};
 
 const badRequest = (message: string): never => {
   throw new HTTPException(400, { message });
@@ -189,6 +196,7 @@ async function resolveSubjects(
         label: project.name,
         expr: sql``,
         projectId: project.id,
+        poolScoped: !!poolId,
       };
     }
     return badRequest(`Unknown filter field: ${key}`);
@@ -380,12 +388,17 @@ function conditionSql(
       }
     }
     case "board": {
+      // A task on the board linked to the contact, or to the person as a
+      // pool member: in a pool list, this pool's member; else any of theirs.
+      const memberLink = subject.poolScoped
+        ? sql`${taskPoolMemberTable.memberId} = ${poolMemberTable.id}`
+        : sql`${taskPoolMemberTable.memberId} IN (SELECT ${poolMemberTable.id} FROM ${poolMemberTable} WHERE ${poolMemberTable.contactId} = ${contactTable.id})`;
       const onBoard = (columns?: string[]) =>
-        sql`EXISTS (SELECT 1 FROM ${taskContactTable} INNER JOIN ${taskTable} ON ${taskTable.id} = ${taskContactTable.taskId} WHERE ${taskContactTable.contactId} = ${contactTable.id} AND ${taskTable.projectId} = ${subject.projectId}${
+        sql`EXISTS (SELECT 1 FROM ${taskTable} WHERE ${taskTable.projectId} = ${subject.projectId}${
           columns
             ? sql` AND ${taskTable.columnId} = ANY(${textArray(columns)})`
             : sql``
-        })`;
+        } AND (EXISTS (SELECT 1 FROM ${taskContactTable} WHERE ${taskContactTable.taskId} = ${taskTable.id} AND ${taskContactTable.contactId} = ${contactTable.id}) OR EXISTS (SELECT 1 FROM ${taskPoolMemberTable} WHERE ${taskPoolMemberTable.taskId} = ${taskTable.id} AND ${memberLink})))`;
       switch (op) {
         case "any_of":
           return onBoard(v as string[]);

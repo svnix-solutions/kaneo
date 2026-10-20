@@ -552,3 +552,148 @@ describe("pools", () => {
     ).toBe(403);
   });
 });
+
+describe("pipelines", () => {
+  it("puts members on a board once, links tasks to members, and shows them on the pool", async () => {
+    const { call, nurse, ids, members, ws } = await seeded();
+    const client = await createProjectFixture({ workspaceId: ws });
+    const add = (body: Record<string, unknown>) =>
+      call("POST", `/pool/${nurse.id}/bulk/add-to-board`, {
+        projectId: client.project.id,
+        ...body,
+      });
+
+    const first = await add({ ids: [ids.asha, ids.bina, ids.deepa] });
+    expect(first.status).toBe(200);
+    // Deepa is not in the nurse pool: ignored.
+    expect(first.body).toMatchObject({ added: 2, skipped: 0 });
+    expect((await add({ ids: [ids.asha] })).body).toMatchObject({
+      added: 0,
+      skipped: 1,
+    });
+
+    const tasks = await db
+      .select()
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.projectId, client.project.id));
+    expect(tasks.map((t) => t.title).sort()).toEqual(["Asha", "Bina"]);
+    // First stage by default, numbered like any board task.
+    expect(new Set(tasks.map((t) => t.columnId))).toEqual(
+      new Set([client.columns.todo.id]),
+    );
+    expect(tasks.every((t) => (t.number ?? 0) > 0)).toBe(true);
+
+    const rows = (await call("POST", `/pool/${nurse.id}/query`, { limit: 200 }))
+      .body.items as {
+      name: string;
+      pipelines: { projectId: string; columnName: string }[];
+    }[];
+    const asha = rows.find((r) => r.name === "Asha");
+    expect(asha?.pipelines).toHaveLength(1);
+    expect(asha?.pipelines[0]).toMatchObject({
+      projectId: client.project.id,
+      columnName: client.columns.todo.name,
+    });
+
+    // The board filter matches member-linked tasks, on the pool and on contacts.
+    const onClient = { field: `board:${client.project.id}`, op: "not_empty" };
+    expect(await members(nurse.id, [onClient])).toEqual(["Asha", "Bina"]);
+    const contactsOnClient = (
+      await call("POST", `/contact/workspace/${ws}/query`, {
+        filter: { conditions: [onClient] },
+      })
+    ).body.items
+      .map((c: { name: string }) => c.name)
+      .sort();
+    expect(contactsOnClient).toEqual(["Asha", "Bina"]);
+
+    // A chosen stage, and the task page lists the member.
+    const chitraJoins = await call(
+      "PUT",
+      `/pool/${nurse.id}/members/${ids.chitra}`,
+      {},
+    );
+    expect(chitraJoins.status).toBe(200);
+    const later = await add({
+      ids: [ids.chitra],
+      columnId: client.columns.inReview.id,
+    });
+    const [chitraTask] = later.body.taskIds;
+    const onTask = (await call("GET", `/pool/task/${chitraTask}/members`)).body;
+    expect(onTask).toHaveLength(1);
+    expect(onTask[0]).toMatchObject({
+      name: "Chitra",
+      pool: { slug: "nurse" },
+    });
+    const [moved] = await db
+      .select()
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.id, chitraTask));
+    expect(moved?.columnId).toBe(client.columns.inReview.id);
+
+    // Removing the member drops the link; the task stays.
+    await call("DELETE", `/pool/${nurse.id}/members/${ids.chitra}`);
+    expect(
+      (await call("GET", `/pool/task/${chitraTask}/members`)).body,
+    ).toEqual([]);
+    const [kept] = await db
+      .select()
+      .from(schema.taskTable)
+      .where(eq(schema.taskTable.id, chitraTask));
+    expect(kept).toBeTruthy();
+  });
+
+  it("links and unlinks existing tasks; refuses foreign boards and non-members", async () => {
+    const { call, nurse, ids, board } = await seeded();
+    const [task] = await db
+      .insert(schema.taskTable)
+      .values({
+        projectId: board.project.id,
+        title: "Interview Asha",
+        number: 99,
+        status: "to-do",
+        columnId: board.columns.todo.id,
+      })
+      .returning();
+    const path = `/pool/${nurse.id}/members/${ids.asha}/tasks`;
+    expect((await call("POST", path, { taskId: task?.id })).body.created).toBe(
+      true,
+    );
+    expect((await call("POST", path, { taskId: task?.id })).body.created).toBe(
+      false,
+    );
+    expect(
+      (await call("GET", path)).body.map((t: { taskId: string }) => t.taskId),
+    ).toContain(task?.id);
+    await call("DELETE", `${path}/${task?.id}`);
+    expect(
+      (await call("GET", path)).body.map((t: { taskId: string }) => t.taskId),
+    ).not.toContain(task?.id);
+
+    expect(
+      (await call("GET", `/pool/${nurse.id}/members/${ids.deepa}/tasks`))
+        .status,
+    ).toBe(404);
+    const other = await createProjectFixture({
+      workspaceId: (await createWorkspaceMember({ role: "admin" })).workspace
+        .id,
+    });
+    expect(
+      (
+        await call("POST", `/pool/${nurse.id}/bulk/add-to-board`, {
+          ids: [ids.asha],
+          projectId: other.project.id,
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await call("POST", `/pool/${nurse.id}/bulk/add-to-board`, {
+          ids: [ids.asha],
+          projectId: board.project.id,
+          columnId: "nope",
+        })
+      ).status,
+    ).toBe(400);
+  });
+});

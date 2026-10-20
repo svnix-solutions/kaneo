@@ -3,7 +3,8 @@
 // A contact is one person (name, phone, email, the source system's id). A pool
 // (Nurse pool, Electrician pool, ...) is a workspace list like a project: it
 // has its own field definitions, and a contact joins it as a pool member that
-// holds that pool's field values. Tasks link to contacts.
+// holds that pool's field values. Tasks link to contacts (before any pool) or
+// to pool members (pipelines, e.g. a client's hiring board).
 //
 // Kept out of database/schema.ts on purpose: these tables have their own
 // drizzle-kit config (drizzle.candidates.config.ts) and migration stream
@@ -182,5 +183,37 @@ export const taskContactTable = pgTable(
       table.contactId,
     ),
     index("task_contact_contactId_idx").on(table.contactId),
+  ],
+);
+
+// A pool member on a pipeline board (e.g. a client's Interview -> Hired
+// board): tasks about the person as a member of that pool. Tasks that come
+// before any pool (lead screening) link to the contact instead.
+export const taskPoolMemberTable = pgTable(
+  "task_pool_member",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, cascade),
+    memberId: text("member_id")
+      .notNull()
+      .references(() => poolMemberTable.id, cascade),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" })
+      .default(utcNow)
+      .notNull(),
+  },
+  (table) => [
+    unique("task_pool_member_task_member_unique").on(
+      table.taskId,
+      table.memberId,
+    ),
+    index("task_pool_member_memberId_idx").on(table.memberId),
   ],
 );

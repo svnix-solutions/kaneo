@@ -15,6 +15,13 @@
 			"when": 1792496307073,
 			"tag": "0001_contacts_pools",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1792499944899,
+			"tag": "0002_pool_member_tasks",
+			"breakpoints": true
 		}
 	]
 }

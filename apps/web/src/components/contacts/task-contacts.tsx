@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Contact as ContactIcon, Search, X } from "lucide-react";
+import { Contact as ContactIcon, Search, UsersRound, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SectionAddButton } from "@/components/task/sections/section-add-button";
@@ -21,6 +21,8 @@ import useLinkContactTask from "@/hooks/mutations/contact/use-link-contact-task"
 import useUnlinkContactTask from "@/hooks/mutations/contact/use-unlink-contact-task";
 import useQueryContacts from "@/hooks/queries/contact/use-query-contacts";
 import useGetTaskContacts from "@/hooks/queries/contact/use-get-task-contacts";
+import useUnlinkPoolMemberTask from "@/hooks/mutations/pool/use-unlink-pool-member-task";
+import useGetTaskPoolMembers from "@/hooks/queries/pool/use-get-task-pool-members";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
@@ -40,6 +42,10 @@ export default function TaskContacts({
   const [query, setQuery] = useState("");
   const search = useDebouncedValue(query.trim(), 250);
   const { data: linked = [] } = useGetTaskContacts(taskId);
+  // Pipeline tasks link to pool members (shortlisted from a pool).
+  const { data: members = [] } = useGetTaskPoolMembers(taskId);
+  const { mutate: unlinkMember } = useUnlinkPoolMemberTask();
+  const count = linked.length + members.length;
   const { data: results, isFetching } = useQueryContacts(
     pickerOpen ? workspaceId : "",
     search,
@@ -79,9 +85,9 @@ export default function TaskContacts({
         <SectionHeader
           title={t("contacts:task.title")}
           meta={
-            linked.length > 0 && (
+            count > 0 && (
               <span className="text-muted-foreground text-xs tabular-nums">
-                {linked.length}
+                {count}
               </span>
             )
           }
@@ -125,7 +131,41 @@ export default function TaskContacts({
               ) : null}
             </div>
           ))}
-          {linked.length === 0 && (
+          {members.map((member) => (
+            <div key={member.memberId} className={sectionRowClass}>
+              <Link
+                to="/dashboard/workspace/$workspaceId/contacts/$contactId"
+                params={{ workspaceId, contactId: member.id }}
+                aria-label={`${t("contacts:task.open")}: ${member.name}`}
+                className="flex min-w-0 flex-1 items-center gap-2.5 outline-none"
+              >
+                <UsersRound className="size-3.5 shrink-0 text-muted-foreground" />
+                <span className="min-w-0 truncate text-[13px]">
+                  {member.name}
+                </span>
+                <span className="shrink-0 text-muted-foreground text-xs">
+                  {member.pool.name}
+                </span>
+              </Link>
+              {canEdit ? (
+                <button
+                  type="button"
+                  aria-label={t("contacts:task.unlink")}
+                  className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+                  onClick={() =>
+                    unlinkMember({
+                      poolId: member.pool.id,
+                      contactId: member.id,
+                      taskId,
+                    })
+                  }
+                >
+                  <X className="size-3.5" />
+                </button>
+              ) : null}
+            </div>
+          ))}
+          {count === 0 && (
             <p className="px-2 py-1 text-muted-foreground text-xs">
               {t("contacts:task.empty")}
             </p>
