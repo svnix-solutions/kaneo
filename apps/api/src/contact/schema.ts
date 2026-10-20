@@ -279,3 +279,23 @@ export const projectMessageStepTable = pgTable(
   },
   (table) => [index("project_message_step_projectId_idx").on(table.projectId)],
 );
+
+// Message flows recruiters can send by hand from the Contacts and pool pages:
+// a named Typebot "message flow" the glue starts per selected contact.
+export const messageFlowTable = pgTable(
+  "message_flow",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, cascade),
+    name: text("name").notNull(),
+    typebotPublicId: text("typebot_public_id").notNull(),
+    description: text("description"),
+    position: integer("position").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("message_flow_workspaceId_idx").on(table.workspaceId)],
+);

@@ -24,6 +24,7 @@ import {
   valuesFor,
 } from "./fields";
 import { buildContactFilter, type ContactFilter } from "./filter";
+import { poolStatesFor } from "./pool-state";
 import {
   contactTable,
   poolMemberTable,
@@ -77,14 +78,16 @@ export function serializeContactCore(c: Contact) {
 
 async function serializeContacts(rows: Contact[], conn: DbLike = db) {
   const ids = rows.map((r) => r.id);
-  const [pools, targets] = await Promise.all([
+  const [pools, targets, states] = await Promise.all([
     linkedPools(poolMemberTable, ids, conn),
     linkedPools(contactTargetPoolTable, ids, conn),
+    poolStatesFor(ids, conn),
   ]);
   return rows.map((r) => ({
     ...serializeContactCore(r),
     pools: pools.get(r.id) ?? [],
     targetPools: targets.get(r.id) ?? [],
+    poolStates: states.get(r.id) ?? [],
   }));
 }
 

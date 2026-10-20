@@ -852,3 +852,144 @@ describe("screening", () => {
     ).toBe(400);
   });
 });
+
+describe("pool states and manual messages", () => {
+  it("shows each pool with the screening stage, and filters on it", async () => {
+    const { call, ws, contact, newPool, board } = await setup();
+    const nurse = await newPool("Nurse pool", "nurse");
+    await call("PUT", `/pool/${nurse.id}`, {
+      screeningProjectId: board.project.id,
+    });
+    const a = await contact("A1", { name: "Asha", targetPools: ["nurse"] });
+    const b = await contact("B1", { name: "Bina", targetPools: ["nurse"] });
+    const c = await contact("C1", { name: "Chitra", targetPools: ["nurse"] });
+    const d = await contact("D1", { name: "Deepa" });
+    const e = await contact("E1", { name: "Esha" }); // queued without a target
+    await call("PUT", `/pool/${nurse.id}/members/${d.id}`, {});
+    const queued = (
+      await call("POST", `/pool/${nurse.id}/bulk/add-to-screening`, {
+        ids: [b.id, c.id, e.id],
+      })
+    ).body.taskIds as string[];
+    // Chitra's task moves onto the board, then to its final stage.
+    await db
+      .update(schema.taskTable)
+      .set({ status: "done", columnId: board.columns.done.id })
+      .where(eq(schema.taskTable.id, queued[1] ?? ""));
+
+    const state = async (id: string) =>
+      (await call("GET", `/contact/${id}`)).body.poolStates[0];
+    expect(await state(a.id)).toMatchObject({
+      slug: "nurse",
+      target: true,
+      state: "not_queued",
+    });
+    expect(await state(b.id)).toMatchObject({ state: "backlog", stage: null });
+    expect(await state(c.id)).toMatchObject({
+      state: "final",
+      stage: board.columns.done.name,
+    });
+    expect(await state(d.id)).toMatchObject({
+      member: true,
+      target: false,
+      state: "member",
+    });
+    // Queuing for screening makes the pool a target.
+    expect(await state(e.id)).toMatchObject({ target: true, state: "backlog" });
+
+    const names = async (value: string[], op = "any_of") =>
+      (
+        await call("POST", `/contact/workspace/${ws}/query`, {
+          filter: {
+            conditions: [{ field: `screening:${nurse.id}`, op, value }],
+          },
+        })
+      ).body.items
+        .map((x: { name: string }) => x.name)
+        .sort();
+    expect(await names(["backlog"])).toEqual(["Bina", "Esha"]);
+    expect(await names([board.columns.done.id])).toEqual(["Chitra"]);
+    expect(await names(["none"])).toEqual(["Asha", "Deepa"]);
+    expect(await names(["backlog", board.columns.done.id], "none_of")).toEqual([
+      "Asha",
+      "Deepa",
+    ]);
+    // Pool rows carry the member's screening state.
+    const rows = (await call("POST", `/pool/${nurse.id}/query`, {})).body.items;
+    expect(rows[0].screening).toMatchObject({ state: "member" });
+  });
+
+  it("keeps message flows and sends through the glue", async () => {
+    const { call, ws, contact, newPool } = await setup();
+    const nurse = await newPool("Nurse pool", "nurse");
+    const a = await contact("A1", { name: "Asha", email: "a@x.com" });
+    const flows = (
+      await call("PUT", `/screening/workspace/${ws}/flows`, {
+        flows: [{ name: "Re-invite", typebotPublicId: "nurse-reinvite" }],
+      })
+    ).body;
+    expect(flows).toMatchObject([
+      { name: "Re-invite", typebotPublicId: "nurse-reinvite" },
+    ]);
+
+    const send = (body: Record<string, unknown>) =>
+      call("POST", `/contact/workspace/${ws}/bulk/message`, {
+        ids: [a.id],
+        ...body,
+      });
+    const saved = { url: process.env.GLUE_URL, token: process.env.GLUE_TOKEN };
+    delete process.env.GLUE_URL;
+    expect((await send({ flowId: flows[0].id })).status).toBe(503);
+
+    const { createServer } = await import("node:http");
+    const got: { auth?: string; body: Record<string, unknown> }[] = [];
+    const glue = createServer((req, res) => {
+      let raw = "";
+      req.on("data", (d) => (raw += d));
+      req.on("end", () => {
+        got.push({ auth: req.headers.authorization, body: JSON.parse(raw) });
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(
+          JSON.stringify({
+            sent: 1,
+            skipped: 0,
+            failed: 0,
+            results: [{ contactId: a.id, status: "sent" }],
+          }),
+        );
+      });
+    });
+    await new Promise<void>((r) => glue.listen(0, r));
+    const port = (glue.address() as { port: number }).port;
+    process.env.GLUE_URL = `http://127.0.0.1:${port}`;
+    process.env.GLUE_TOKEN = "glue-token";
+    try {
+      expect((await send({})).status).toBe(400); // neither flow nor message
+      expect(
+        (await send({ compose: { channel: "email", body: "x" } })).status,
+      ).toBe(400); // email needs a subject
+      const r = await send({ flowId: flows[0].id, poolId: nurse.id });
+      expect(r.body).toMatchObject({ sent: 1 });
+      expect(got[0]?.auth).toBe("Bearer glue-token");
+      expect(got[0]?.body).toMatchObject({
+        flow: { typebotPublicId: "nurse-reinvite" },
+        pool: { slug: "nurse" },
+        contacts: [{ id: a.id, externalId: "A1", email: "a@x.com" }],
+        compose: null,
+      });
+      await send({
+        compose: { channel: "whatsapp", body: "Hi {{first_name}}" },
+      });
+      expect(got[1]?.body).toMatchObject({
+        flow: null,
+        compose: { channel: "whatsapp", body: "Hi {{first_name}}" },
+      });
+    } finally {
+      glue.close();
+      process.env.GLUE_URL = saved.url;
+      process.env.GLUE_TOKEN = saved.token;
+      if (!saved.url) delete process.env.GLUE_URL;
+      if (!saved.token) delete process.env.GLUE_TOKEN;
+    }
+  });
+});

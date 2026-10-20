@@ -12,6 +12,7 @@ import { serializeContactCore } from "./contacts";
 import { badRequest, notFound } from "./fields";
 import {
   contactTable,
+  contactTargetPoolTable,
   poolTable,
   projectMessageStepTable as stepTable,
   taskContactTable,
@@ -20,7 +21,8 @@ import {
 /**
  * Queue contacts for a pool's screening: one backlog task each on the pool's
  * screening board (with the contact's priority), linked to the contact.
- * Contacts already with a task on that board are skipped.
+ * Contacts already with a task on that board are skipped. The pool becomes
+ * one of each contact's target pools.
  */
 export async function addToScreening(
   poolId: string,
@@ -52,6 +54,12 @@ export async function addToScreening(
       ),
     );
   if (contacts.length === 0) return { added: 0, skipped: 0, taskIds: [] };
+
+  // Queued for a pool's screening means meant for that pool.
+  await db
+    .insert(contactTargetPoolTable)
+    .values(contacts.map((c) => ({ contactId: c.id, poolId })))
+    .onConflictDoNothing();
 
   const queued = new Set(
     (

@@ -77,6 +77,15 @@ export function FilterValueInput({
           onChange={onChange}
         />
       );
+    case "stage":
+      return (
+        <BoardColumnsPicker
+          projectId={subject.projectId ?? ""}
+          selected={list}
+          onChange={onChange}
+          withQueue
+        />
+      );
     case "board":
       return (
         <BoardColumnsPicker
@@ -110,15 +119,27 @@ function BoardColumnsPicker({
   projectId,
   selected,
   onChange,
+  withQueue = false,
 }: {
   projectId: string;
   selected: string[];
   onChange: (value: string[]) => void;
+  /** Screening stages: also "Not queued" and "Backlog". */
+  withQueue?: boolean;
 }) {
+  const { t } = useTranslation();
   const { data: columns = [] } = useGetColumns(projectId);
   return (
     <OptionsPicker
-      options={columns.map((c) => ({ value: c.id, label: c.name }))}
+      options={[
+        ...(withQueue
+          ? [
+              { value: "none", label: t("contacts:poolState.not_queued") },
+              { value: "backlog", label: t("contacts:poolState.backlog") },
+            ]
+          : []),
+        ...columns.map((c) => ({ value: c.id, label: c.name })),
+      ]}
       selected={selected}
       onChange={onChange}
     />

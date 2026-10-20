@@ -12,6 +12,7 @@ import { requireWorkspacePermission } from "../utils/require-workspace-permissio
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { contactAccess } from "./access";
 import * as svc from "./contacts";
+import * as messaging from "./messaging";
 import {
   bulkIdsBody,
   bulkUpdateContactsBody,
@@ -22,6 +23,7 @@ import {
   linkTaskBody,
   listContactsQuery,
   queryBody,
+  sendMessagesBody,
   setTargetsBody,
   taskIdParam,
   updateContactBody,
@@ -37,6 +39,7 @@ import {
   contactTaskSchema,
   contactUpsertSchema,
   linkResponseSchema,
+  sendMessagesResponseSchema,
   successSchema,
 } from "./response";
 
@@ -165,6 +168,27 @@ const bulkDeleteRoute = createRoute({
   ] as const,
   request: { params: workspaceIdParam, body: json(bulkIdsBody) },
   responses: { 200: jsonResponse("Deleted", bulkDeleteResponseSchema) },
+});
+
+const sendMessagesRoute = createRoute({
+  method: "post",
+  operationId: "sendContactMessages",
+  path: "/workspace/{workspaceId}/bulk/message",
+  tags,
+  summary: "Send a message to many contacts",
+  description:
+    "A registered Typebot message flow, or a one-off email / WhatsApp, sent by the glue to each contact. Contacts missing the needed email or phone are skipped.",
+  middleware: [
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: workspaceIdParam, body: json(sendMessagesBody) },
+  responses: {
+    200: jsonResponse("Sent", sendMessagesResponseSchema),
+    400: errorResponse("Invalid message"),
+    502: errorResponse("The glue refused the send"),
+    503: errorResponse("Messaging is not configured"),
+  },
 });
 
 const taskContactsRoute = createRoute({
@@ -379,6 +403,15 @@ const contact = apiRouter()
       await svc.bulkDeleteContacts(
         c.req.valid("param").workspaceId,
         c.req.valid("json").ids,
+      ),
+      200,
+    ),
+  )
+  .openapi(sendMessagesRoute, async (c) =>
+    c.json(
+      await messaging.sendMessages(
+        c.req.valid("param").workspaceId,
+        c.req.valid("json"),
       ),
       200,
     ),

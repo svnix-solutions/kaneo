@@ -18,6 +18,7 @@ import { getPriorityLabel } from "@/lib/i18n/domain";
 import { getPriorityIcon } from "@/lib/priority";
 import type { ContactRow } from "./contact-row";
 import { FieldValue } from "./field-value";
+import { PoolStateChip } from "./pool-state-chip";
 
 const CORE_COLUMNS = [
   "name",
@@ -114,14 +115,14 @@ export function ContactsTable({
             </TableHead>
           ))}
           {showPools ? (
-            <>
-              <TableHead className="whitespace-nowrap font-medium text-foreground">
-                {t("contacts:columns.targetPools")}
-              </TableHead>
-              <TableHead className="whitespace-nowrap font-medium text-foreground">
-                {t("contacts:columns.pools")}
-              </TableHead>
-            </>
+            <TableHead className="whitespace-nowrap font-medium text-foreground">
+              {t("contacts:columns.pools")}
+            </TableHead>
+          ) : null}
+          {showPipelines ? (
+            <TableHead className="whitespace-nowrap font-medium text-foreground">
+              {t("contacts:columns.screening")}
+            </TableHead>
           ) : null}
           {showPipelines ? (
             <TableHead className="whitespace-nowrap font-medium text-foreground">
@@ -148,7 +149,7 @@ export function ContactsTable({
                     <Skeleton className="h-4 w-20" />
                   </TableCell>
                 ))}
-                {showPools ? (
+                {showPipelines ? (
                   <TableCell className="py-3">
                     <Skeleton className="h-4 w-16" />
                   </TableCell>
@@ -224,28 +225,21 @@ export function ContactsTable({
                 </TableCell>
                 {showPools ? (
                   <TableCell className="py-3">
-                    <div className="flex max-w-64 flex-wrap gap-1">
-                      {(contact.targetPools ?? []).map((pool) => (
-                        <Badge
-                          key={pool.id}
-                          variant="outline"
-                          className="border-dashed text-muted-foreground"
-                        >
-                          {pool.name}
-                        </Badge>
+                    <div className="flex max-w-80 flex-wrap gap-1">
+                      {(contact.poolStates ?? []).map((state) => (
+                        <PoolStateChip key={state.id} state={state} />
                       ))}
                     </div>
                   </TableCell>
                 ) : null}
-                {showPools ? (
+                {showPipelines ? (
                   <TableCell className="py-3">
-                    <div className="flex max-w-64 flex-wrap gap-1">
-                      {(contact.pools ?? []).map((pool) => (
-                        <Badge key={pool.id} variant="outline">
-                          {pool.name}
-                        </Badge>
-                      ))}
-                    </div>
+                    {contact.screening ? (
+                      <PoolStateChip
+                        state={contact.screening}
+                        withPool={false}
+                      />
+                    ) : null}
                   </TableCell>
                 ) : null}
                 {showPipelines ? (

@@ -114,7 +114,7 @@ function AddFromPoolDialog({
     () => rawFields.map(toCustomFieldDefinition),
     [rawFields],
   );
-  const subjects = useFilterSubjects(workspaceId, { fields });
+  const subjects = useFilterSubjects(workspaceId, { fields, pool });
   const [filter, setFilter] = useState<DraftFilter>(EMPTY_FILTER);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterJson = useDebouncedValue(

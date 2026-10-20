@@ -3772,7 +3772,8 @@
 			"pools": "Pools",
 			"pipelines": "Pipelines",
 			"priority": "Priority",
-			"targetPools": "Target pools"
+			"targetPools": "Target pools",
+			"screening": "Screening"
 		},
 		"emptyTitle": "No contacts yet",
 		"emptyDescription": "Add a contact, or let a lead source create them.",
@@ -3914,8 +3915,11 @@
 				"poolsNoneOf": "is in none of",
 				"poolsAllOf": "is in all of",
 				"poolsEmpty": "is in no pool",
-				"poolsNotEmpty": "is in any pool"
-			}
+				"poolsNotEmpty": "is in any pool",
+				"stageAnyOf": "is",
+				"stageNoneOf": "is not"
+			},
+			"screeningOf": "{{pool}} · screening"
 		},
 		"bulk": {
 			"selectAll": "Select all contacts",
@@ -4018,6 +4022,57 @@
 			"variablesNote": "Each flow starts with these variables filled: {{variables}}. Use Send email blocks for email, and an HTTP request to the glue's /messages/whatsapp for WhatsApp.",
 			"webhookNote": "To trigger the steps, add a Generic webhook under this board's Integrations pointing at the glue's /events/kaneo, with “Task status changed” on and the shared secret."
 		},
-		"save": "Save"
+		"save": "Save",
+		"poolState": {
+			"not_queued": "Not queued",
+			"backlog": "Backlog",
+			"in_progress": "In progress",
+			"final": "Done",
+			"member": "Member"
+		},
+		"send": {
+			"button": "Send message",
+			"title_one": "Message {{count}} contact",
+			"title_other": "Message {{count}} contacts",
+			"description": "Send a Typebot message flow, or write a one-off email or WhatsApp. Contacts without the needed email or phone are skipped.",
+			"about": "About pool",
+			"noPool": "No pool",
+			"aboutHint": "Fills {{pool}} and the personal apply {{link}}.",
+			"flowTab": "Message flow",
+			"composeTab": "Write a message",
+			"flow": "Message flow",
+			"noFlows": "No message flows yet.",
+			"channel": "Channel",
+			"channels": {
+				"email": "Email",
+				"whatsapp": "WhatsApp"
+			},
+			"subject": "Subject",
+			"body": "Message",
+			"bodyPlaceholder": "Hi {{first_name}}, …",
+			"templateHint": "Outside 24 hours after their last reply, WhatsApp only delivers an approved template. Name it here and give its parameters, one per line.",
+			"template": "Template name (optional)",
+			"language": "Language",
+			"params": "Template parameters",
+			"paramsPlaceholder": "{{first_name}}\n{{link}}",
+			"placeholders": "Placeholders: {{placeholders}}",
+			"submit_one": "Send to {{count}}",
+			"submit_other": "Send to {{count}}",
+			"result": "Sent {{sent}}, skipped {{skipped}}, failed {{failed}}.",
+			"error": "Couldn't send the message."
+		},
+		"flows": {
+			"title": "Message flows",
+			"manage": "Manage message flows",
+			"description": "Typebot flows recruiters can send by hand from the Contacts and pool pages.",
+			"empty": "No message flows yet.",
+			"name": "Name",
+			"namePlaceholder": "Re-invite",
+			"add": "Add flow",
+			"remove": "Remove flow",
+			"hint": "Each flow starts with the contact's name, first_name, phone, email, pool, link and lead_id filled.",
+			"saved": "Message flows saved.",
+			"saveError": "Couldn't save the message flows."
+		}
 	}
 }

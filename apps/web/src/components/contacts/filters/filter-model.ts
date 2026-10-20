@@ -14,6 +14,7 @@ export type FilterKind =
   | "dropdown"
   | "multiselect"
   | "pools"
+  | "stage"
   | "board";
 
 export type FilterSubject = {
@@ -57,11 +58,18 @@ export const OPERATORS: Record<FilterKind, FilterOperator[]> = {
   dropdown: ["any_of", "none_of", "empty", "not_empty"],
   multiselect: ["any_of", "all_of", "none_of", "empty", "not_empty"],
   pools: ["any_of", "none_of", "all_of", "empty", "not_empty"],
+  stage: ["any_of", "none_of"],
   board: ["not_empty", "any_of", "none_of", "empty"],
 };
 
 const NO_VALUE: FilterOperator[] = ["empty", "not_empty"];
-const LIST_KINDS: FilterKind[] = ["dropdown", "multiselect", "pools", "board"];
+const LIST_KINDS: FilterKind[] = [
+  "dropdown",
+  "multiselect",
+  "pools",
+  "stage",
+  "board",
+];
 
 export const takesValue = (op: FilterOperator) => !NO_VALUE.includes(op);
 export const takesList = (kind: FilterKind) => LIST_KINDS.includes(kind);

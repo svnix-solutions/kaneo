@@ -7,6 +7,7 @@ import {
   Trash2,
   UserMinus,
   Kanban,
+  Send,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,6 +48,7 @@ type BulkBarProps = {
   fields?: CustomFieldDefinition[];
   selectAll: () => void;
   clearSelection: () => void;
+  onSendMessage?: () => void;
 };
 
 type Confirm = "delete" | "remove" | null;
@@ -58,6 +60,7 @@ export function BulkBar({
   fields = [],
   selectAll,
   clearSelection,
+  onSendMessage,
 }: BulkBarProps) {
   const { t } = useTranslation();
   const { mounted, hidden, displayCount } = useToolbarPresence(selected.length);
@@ -224,6 +227,7 @@ export function BulkBar({
     .filter((p) => p.screeningProjectId)
     .map((p) => ({ value: p.id, label: p.name }));
   const exportLabel = t("contacts:bulk.export");
+  const sendLabel = t("contacts:send.button");
   const boardLabel = t("contacts:pipelines.addToBoard");
   const removeLabel = t("contacts:bulk.remove");
   const deleteLabel = t("contacts:bulk.delete");
@@ -295,6 +299,18 @@ export function BulkBar({
               }
             />
           )}
+          {canEdit && onSendMessage ? (
+            <BarTooltip label={sendLabel}>
+              <button
+                type="button"
+                onClick={onSendMessage}
+                className={barButtonClass}
+              >
+                <Send />
+                <span className="max-lg:sr-only">{sendLabel}</span>
+              </button>
+            </BarTooltip>
+          ) : null}
           <BarTooltip label={exportLabel}>
             <button
               type="button"

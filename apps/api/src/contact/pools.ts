@@ -25,6 +25,7 @@ import {
 } from "./fields";
 import { buildContactFilter, type ContactFilter } from "./filter";
 import { pipelinesFor } from "./pipelines";
+import { poolStatesFor } from "./pool-state";
 import { contactTable, poolMemberTable, poolTable } from "./schema";
 
 type Pool = typeof poolTable.$inferSelect;
@@ -243,14 +244,21 @@ async function pageOfMembers(
       .where(where),
   ]);
   const memberIds = rows.map((r) => r.member.id);
-  const [values, pipelines] = await Promise.all([
+  const poolId = rows[0]?.member.poolId;
+  const [values, pipelines, states] = await Promise.all([
     valuesFor(memberIds),
     pipelinesFor(memberIds, userId),
+    poolStatesFor(
+      rows.map((r) => r.contact.id),
+      db,
+      poolId,
+    ),
   ]);
   return {
     items: rows.map((r) => ({
       ...serializeMember(r.contact, r.member, values.get(r.member.id) ?? {}),
       pipelines: pipelines.get(r.member.id) ?? [],
+      screening: states.get(r.contact.id)?.[0] ?? null,
     })),
     total: totalRow?.total ?? 0,
   };

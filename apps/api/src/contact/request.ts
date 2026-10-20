@@ -253,3 +253,42 @@ export const replaceStepsBody = z.object({
     )
     .max(20),
 });
+
+export const replaceFlowsBody = z.object({
+  flows: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(200),
+        typebotPublicId: z.string().trim().min(1).max(200),
+        description: z.string().trim().max(500).nullable().optional(),
+      }),
+    )
+    .max(50),
+});
+
+export const sendMessagesBody = z.object({
+  ids: z.array(z.string().min(1)).min(1).max(200),
+  poolId: z.string().min(1).optional().openapi({
+    description:
+      "Pool the message is about: fills {{pool}} and the apply {{link}}.",
+  }),
+  flowId: z.string().min(1).optional(),
+  compose: z
+    .object({
+      channel: z.enum(["email", "whatsapp"]),
+      subject: z.string().max(300).optional(),
+      body: z.string().max(5000).optional(),
+      template: z
+        .object({
+          name: z.string().min(1).max(200),
+          language: z.string().max(20).optional(),
+          params: z.array(z.string().max(500)).max(10).optional(),
+        })
+        .optional(),
+    })
+    .optional()
+    .openapi({
+      description:
+        "A one-off message. Placeholders: {{name}} {{first_name}} {{phone}} {{email}} {{pool}} {{link}} {{lead_id}}.",
+    }),
+});
