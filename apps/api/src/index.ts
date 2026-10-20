@@ -29,6 +29,7 @@ import customField from "./custom-field";
 import contact from "./contact/contact-routes"; // fork: contacts
 import { migrateContacts } from "./contact/migrate"; // fork: contacts
 import pool from "./contact/pool-routes"; // fork: contacts
+import screening from "./contact/screening-routes"; // fork: contacts
 import db, { getDatabase, schema } from "./database";
 import { apiErrorSchema } from "./errors/api-error-schema";
 import { httpExceptionResponse } from "./errors/http-exception-response";
@@ -878,6 +879,7 @@ export function createApp() {
   const customFieldApi = api.route("/custom-field", customField);
   const contactApi = api.route("/contact", contact); // fork: contacts
   const poolApi = api.route("/pool", pool); // fork: contacts
+  const screeningApi = api.route("/screening", screening); // fork: contacts
   const importApi = api.route("/import", importRoutes);
   const userApi = api.route("/user", user);
   const adminApi = api.route("/admin", admin);
@@ -1012,6 +1014,7 @@ export function createApp() {
     customFieldApi,
     contactApi, // fork: contacts
     poolApi, // fork: contacts
+    screeningApi, // fork: contacts
     importApi,
     oauthApi,
   };
@@ -1148,6 +1151,7 @@ const {
   customFieldApi,
   contactApi, // fork: contacts
   poolApi, // fork: contacts
+  screeningApi, // fork: contacts
   importApi,
   oauthApi,
 } = createdApp;
@@ -1193,6 +1197,7 @@ export type AppType =
   | typeof customFieldApi
   | typeof contactApi // fork: contacts
   | typeof poolApi // fork: contacts
+  | typeof screeningApi // fork: contacts
   | typeof importApi
   | typeof userApi
   | typeof adminApi

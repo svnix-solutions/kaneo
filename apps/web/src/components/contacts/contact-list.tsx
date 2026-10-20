@@ -1,5 +1,11 @@
 import { useNavigate } from "@tanstack/react-router";
-import { Contact, Plus, Search, SlidersHorizontal } from "lucide-react";
+import {
+  Contact,
+  MessageSquareText,
+  Plus,
+  Search,
+  SlidersHorizontal,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
@@ -29,6 +35,8 @@ import { ContactsTable } from "./contacts-table";
 import { CreateContactDialog } from "./create-contact-dialog";
 import { toCustomFieldDefinition } from "./field-adapter";
 import { FilterChips } from "./filters/filter-chips";
+import { MessageFlowsDialog } from "./message-flows-dialog";
+import { SendMessageDialog } from "./send-message-dialog";
 import {
   type DraftFilter,
   EMPTY_FILTER,
@@ -58,7 +66,7 @@ export function ContactList({ workspaceId, pool }: ContactListProps) {
   );
   const subjects = useFilterSubjects(
     workspaceId,
-    pool ? { fields } : { pools: true },
+    pool ? { fields, pool } : { pools: true },
   );
   const [filter, setFilter] = useState<DraftFilter>(EMPTY_FILTER);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -85,6 +93,14 @@ export function ContactList({ workspaceId, pool }: ContactListProps) {
   const canManageFields = !!pool && canManageSettings();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isFieldsOpen, setIsFieldsOpen] = useState(false);
+  const canManageFlows = canManageSettings();
+  // Dialogs remount on each opening (they copy their initial state).
+  const [send, setSend] = useState({ open: false, key: 0 });
+  const [flowsDialog, setFlowsDialog] = useState({ open: false, key: 0 });
+  const openFlows = () => {
+    setSend((s) => ({ ...s, open: false }));
+    setFlowsDialog((f) => ({ open: true, key: f.key + 1 }));
+  };
 
   const rows = useMemo(() => data?.items ?? [], [data]);
   const total = data?.total ?? 0;
@@ -117,6 +133,17 @@ export function ContactList({ workspaceId, pool }: ContactListProps) {
         title={title}
         headerActions={
           <div className="flex items-center gap-1.5">
+            {canManageFlows ? (
+              <Button
+                variant="ghost"
+                size="xs"
+                onClick={openFlows}
+                className="gap-1"
+              >
+                <MessageSquareText className="h-3 w-3" />
+                {t("contacts:flows.title")}
+              </Button>
+            ) : null}
             {canManageFields ? (
               <Button
                 variant="ghost"
@@ -242,7 +269,25 @@ export function ContactList({ workspaceId, pool }: ContactListProps) {
         fields={fields}
         selectAll={selectAll}
         clearSelection={clearSelection}
+        onSendMessage={() => setSend((s) => ({ open: true, key: s.key + 1 }))}
       />
+      <SendMessageDialog
+        key={`send-${send.key}`}
+        workspaceId={workspaceId}
+        ids={selected.map((c) => c.id)}
+        poolId={pool?.id}
+        open={send.open}
+        onOpenChange={(open) => setSend((s) => ({ ...s, open }))}
+        onManageFlows={canManageFlows ? openFlows : undefined}
+      />
+      {canManageFlows ? (
+        <MessageFlowsDialog
+          key={`flows-${flowsDialog.key}`}
+          workspaceId={workspaceId}
+          open={flowsDialog.open}
+          onOpenChange={(open) => setFlowsDialog((f) => ({ ...f, open }))}
+        />
+      ) : null}
       <CreateContactDialog
         workspaceId={workspaceId}
         poolId={pool?.id}

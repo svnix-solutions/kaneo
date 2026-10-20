@@ -109,15 +109,24 @@ function ChipValue({
   condition: DraftCondition;
 }) {
   const { t } = useTranslation();
+  const onBoard = subject.kind === "board" || subject.kind === "stage";
   const { data: columns = [] } = useGetColumns(
-    subject.kind === "board" ? (subject.projectId ?? "") : "",
+    onBoard ? (subject.projectId ?? "") : "",
   );
   const { value } = condition;
   if (Array.isArray(value)) {
-    return subject.kind === "board"
-      ? columns
-          .filter((c) => value.includes(c.id))
-          .map((c) => c.name)
+    const queue: Record<string, string> = {
+      none: t("contacts:poolState.not_queued"),
+      backlog: t("contacts:poolState.backlog"),
+    };
+    return onBoard
+      ? value
+          .map(
+            (v) =>
+              (subject.kind === "stage" ? queue[v] : undefined) ??
+              columns.find((c) => c.id === v)?.name ??
+              v,
+          )
           .join(", ")
       : value
           .map((v) => subject.options?.find((o) => o.value === v)?.label ?? v)

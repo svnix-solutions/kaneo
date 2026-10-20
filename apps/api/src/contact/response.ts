@@ -4,6 +4,18 @@ export const poolRefSchema = z
   .object({ id: z.string(), name: z.string(), slug: z.string() })
   .openapi("PoolRef");
 
+export const poolStateSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    slug: z.string(),
+    target: z.boolean(),
+    member: z.boolean(),
+    stage: z.string().nullable(),
+    state: z.enum(["not_queued", "backlog", "in_progress", "final", "member"]),
+  })
+  .openapi("PoolState");
+
 export const contactSchema = z
   .object({
     id: z.string(),
@@ -13,9 +25,15 @@ export const contactSchema = z
     email: z.string().nullable(),
     externalId: z.string().nullable(),
     source: z.string().nullable(),
+    priority: z.string(),
     createdAt: z.string(),
     updatedAt: z.string(),
     pools: z.array(poolRefSchema),
+    targetPools: z.array(poolRefSchema),
+    poolStates: z.array(poolStateSchema).openapi({
+      description:
+        "Each pool the contact is targeted for or in, with the stage of their task on the pool's screening board.",
+    }),
   })
   .openapi("Contact");
 
@@ -37,6 +55,7 @@ export const poolSchema = z
     description: z.string().nullable(),
     icon: z.string().nullable(),
     position: z.number(),
+    screeningProjectId: z.string().nullable(),
     memberCount: z.number(),
     createdAt: z.string(),
   })
@@ -76,7 +95,7 @@ export const pipelineSchema = z
 // A contact as a row of a pool: the contact's own properties (id is the
 // contact id) plus the membership and its field values.
 export const poolMemberSchema = contactSchema
-  .omit({ pools: true })
+  .omit({ pools: true, targetPools: true, poolStates: true })
   .extend({
     memberId: z.string(),
     poolId: z.string(),
@@ -87,13 +106,16 @@ export const poolMemberSchema = contactSchema
 
 export const poolMemberListSchema = z.object({
   items: z.array(
-    poolMemberSchema.extend({ pipelines: z.array(pipelineSchema) }),
+    poolMemberSchema.extend({
+      pipelines: z.array(pipelineSchema),
+      screening: poolStateSchema.nullable(),
+    }),
   ),
   total: z.number(),
 });
 
 export const taskPoolMemberSchema = contactSchema
-  .omit({ pools: true })
+  .omit({ pools: true, targetPools: true, poolStates: true })
   .extend({ memberId: z.string(), pool: poolRefSchema })
   .openapi("TaskPoolMember");
 
@@ -150,3 +172,60 @@ export const bulkUpdateResponseSchema = z.object({ updated: z.number() });
 export const bulkDeleteResponseSchema = z.object({ deleted: z.number() });
 export const bulkAddResponseSchema = z.object({ added: z.number() });
 export const bulkRemoveResponseSchema = z.object({ removed: z.number() });
+
+export const messageStepSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    typebotPublicId: z.string(),
+    offsetDays: z.number(),
+    position: z.number(),
+    enabled: z.boolean(),
+  })
+  .openapi("MessageStep");
+
+export const screeningContextSchema = z
+  .object({
+    task: z.object({
+      id: z.string(),
+      number: z.number().nullable(),
+      title: z.string(),
+      status: z.string(),
+      priority: z.string().nullable(),
+      projectId: z.string(),
+      projectSlug: z.string(),
+      projectName: z.string(),
+      columnName: z.string().nullable(),
+      isFinal: z.boolean(),
+      inBacklog: z.boolean(),
+    }),
+    contacts: z.array(
+      contactSchema.omit({ pools: true, targetPools: true, poolStates: true }),
+    ),
+    pools: z.array(poolRefSchema),
+    steps: z.array(messageStepSchema),
+  })
+  .openapi("ScreeningContext");
+
+export const messageFlowSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    typebotPublicId: z.string(),
+    description: z.string().nullable(),
+    position: z.number(),
+  })
+  .openapi("MessageFlow");
+
+export const sendMessagesResponseSchema = z.object({
+  sent: z.number(),
+  skipped: z.number(),
+  failed: z.number(),
+  results: z.array(
+    z.object({
+      contactId: z.string(),
+      status: z.string(),
+      error: z.string().optional(),
+    }),
+  ),
+});

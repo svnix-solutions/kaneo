@@ -12,6 +12,7 @@ import { requireWorkspacePermission } from "../utils/require-workspace-permissio
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import { contactAccess } from "./access";
 import * as svc from "./contacts";
+import * as messaging from "./messaging";
 import {
   bulkIdsBody,
   bulkUpdateContactsBody,
@@ -22,6 +23,8 @@ import {
   linkTaskBody,
   listContactsQuery,
   queryBody,
+  sendMessagesBody,
+  setTargetsBody,
   taskIdParam,
   updateContactBody,
   upsertContactBody,
@@ -36,6 +39,7 @@ import {
   contactTaskSchema,
   contactUpsertSchema,
   linkResponseSchema,
+  sendMessagesResponseSchema,
   successSchema,
 } from "./response";
 
@@ -166,6 +170,27 @@ const bulkDeleteRoute = createRoute({
   responses: { 200: jsonResponse("Deleted", bulkDeleteResponseSchema) },
 });
 
+const sendMessagesRoute = createRoute({
+  method: "post",
+  operationId: "sendContactMessages",
+  path: "/workspace/{workspaceId}/bulk/message",
+  tags,
+  summary: "Send a message to many contacts",
+  description:
+    "A registered Typebot message flow, or a one-off email / WhatsApp, sent by the glue to each contact. Contacts missing the needed email or phone are skipped.",
+  middleware: [
+    workspaceAccess.fromParam("workspaceId"),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: workspaceIdParam, body: json(sendMessagesBody) },
+  responses: {
+    200: jsonResponse("Sent", sendMessagesResponseSchema),
+    400: errorResponse("Invalid message"),
+    502: errorResponse("The glue refused the send"),
+    503: errorResponse("Messaging is not configured"),
+  },
+});
+
 const taskContactsRoute = createRoute({
   method: "get",
   operationId: "getTaskContacts",
@@ -247,6 +272,23 @@ const membershipsRoute = createRoute({
   request: { params: contactIdParam },
   responses: {
     200: jsonResponse("Memberships", z.array(contactMembershipSchema)),
+  },
+});
+
+const setTargetsRoute = createRoute({
+  method: "put",
+  operationId: "setContactTargetPools",
+  path: "/{id}/targets",
+  tags,
+  summary: "Set the pools a contact is meant for",
+  middleware: [
+    contactAccess.fromContact(),
+    requireWorkspacePermission({ task: ["update"] }),
+  ] as const,
+  request: { params: contactIdParam, body: json(setTargetsBody) },
+  responses: {
+    200: jsonResponse("Contact", contactSchema),
+    400: errorResponse("Unknown pool"),
   },
 });
 
@@ -365,6 +407,15 @@ const contact = apiRouter()
       200,
     ),
   )
+  .openapi(sendMessagesRoute, async (c) =>
+    c.json(
+      await messaging.sendMessages(
+        c.req.valid("param").workspaceId,
+        c.req.valid("json"),
+      ),
+      200,
+    ),
+  )
   .openapi(taskContactsRoute, async (c) =>
     c.json(await svc.listTaskContacts(c.req.valid("param").taskId), 200),
   )
@@ -382,6 +433,15 @@ const contact = apiRouter()
   )
   .openapi(membershipsRoute, async (c) =>
     c.json(await svc.listContactMemberships(c.req.valid("param").id), 200),
+  )
+  .openapi(setTargetsRoute, async (c) =>
+    c.json(
+      await svc.setTargets(
+        c.req.valid("param").id,
+        c.req.valid("json").poolIds,
+      ),
+      200,
+    ),
   )
   .openapi(listTasksRoute, async (c) =>
     c.json(

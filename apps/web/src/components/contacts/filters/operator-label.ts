@@ -23,6 +23,7 @@ const OVERRIDES: Partial<
     empty: "poolsEmpty",
     not_empty: "poolsNotEmpty",
   },
+  stage: { any_of: "stageAnyOf", none_of: "stageNoneOf" },
   board: {
     any_of: "boardAnyOf",
     none_of: "boardNoneOf",

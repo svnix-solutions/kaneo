@@ -8,6 +8,7 @@ export type CreatePoolRequest = {
   slug?: string;
   description?: string | null;
   icon?: string | null;
+  screeningProjectId?: string | null;
 };
 
 async function createPool({ workspaceId, ...json }: CreatePoolRequest) {

@@ -3770,7 +3770,10 @@
 			"updated": "Updated",
 			"created": "Added",
 			"pools": "Pools",
-			"pipelines": "Pipelines"
+			"pipelines": "Pipelines",
+			"priority": "Priority",
+			"targetPools": "Target pools",
+			"screening": "Screening"
 		},
 		"emptyTitle": "No contacts yet",
 		"emptyDescription": "Add a contact, or let a lead source create them.",
@@ -3844,7 +3847,10 @@
 			"emptyTitle": "No one in this pool yet",
 			"emptyDescription": "Add contacts from the Contacts page, or let an enrichment flow add them.",
 			"notFound": "Pool not found",
-			"notFoundDescription": "It may have been deleted, or you don't have access to it."
+			"notFoundDescription": "It may have been deleted, or you don't have access to it.",
+			"screeningBoard": "Screening board",
+			"noScreeningBoard": "No screening board",
+			"screeningBoardHint": "Contacts queue in this board's backlog to be screened for the pool."
 		},
 		"filter": {
 			"button": "Filter",
@@ -3909,8 +3915,11 @@
 				"poolsNoneOf": "is in none of",
 				"poolsAllOf": "is in all of",
 				"poolsEmpty": "is in no pool",
-				"poolsNotEmpty": "is in any pool"
-			}
+				"poolsNotEmpty": "is in any pool",
+				"stageAnyOf": "is",
+				"stageNoneOf": "is not"
+			},
+			"screeningOf": "{{pool}} · screening"
 		},
 		"bulk": {
 			"selectAll": "Select all contacts",
@@ -3941,7 +3950,11 @@
 			"deleteDescription": "The contacts are removed from every pool, with their pool details. Linked tasks are kept. This can't be undone.",
 			"deleted_one": "Deleted {{count}} contact.",
 			"deleted_other": "Deleted {{count}} contacts.",
-			"deleteError": "Failed to delete contacts."
+			"deleteError": "Failed to delete contacts.",
+			"priorityPlaceholder": "Set priority…",
+			"addTarget": "Add target pool",
+			"targeted_one": "{{pool}} is now a target for {{count}} contact.",
+			"targeted_other": "{{pool}} is now a target for {{count}} contacts."
 		},
 		"task": {
 			"title": "Contacts",
@@ -3983,6 +3996,83 @@
 			"selectNone": "Select none",
 			"addCount_one": "Add {{count}} person",
 			"addCount_other": "Add {{count}} people"
+		},
+		"screening": {
+			"addToScreening": "Add to screening",
+			"queued_one": "Queued {{count}} contact for {{pool}} screening.",
+			"queued_other": "Queued {{count}} contacts for {{pool}} screening.",
+			"queueError": "Couldn't add to the screening backlog.",
+			"settingsTitle": "Screening messages",
+			"settingsDescription": "Messages sent to contacts screened on {{board}}.",
+			"stepsTitle": "Message steps",
+			"stepsDescription": "When a contact's task moves from the backlog onto this board, each step starts its Typebot message flow on its day. Steps stop once the task reaches a final stage.",
+			"noSteps": "No message steps yet.",
+			"stepName": "Step name",
+			"stepNamePlaceholder": "Invite",
+			"typebot": "Typebot flow",
+			"typebotPlaceholder": "Typebot public id",
+			"day": "Day",
+			"enabled": "Enabled",
+			"moveUp": "Move up",
+			"moveDown": "Move down",
+			"removeStep": "Remove step",
+			"addStep": "Add step",
+			"saved": "Message steps saved.",
+			"saveError": "Couldn't save the message steps.",
+			"variablesNote": "Each flow starts with these variables filled: {{variables}}. Use Send email blocks for email, and an HTTP request to the glue's /messages/whatsapp for WhatsApp.",
+			"webhookNote": "To trigger the steps, add a Generic webhook under this board's Integrations pointing at the glue's /events/kaneo, with “Task status changed” on and the shared secret."
+		},
+		"save": "Save",
+		"poolState": {
+			"not_queued": "Not queued",
+			"backlog": "Backlog",
+			"in_progress": "In progress",
+			"final": "Done",
+			"member": "Member"
+		},
+		"send": {
+			"button": "Send message",
+			"title_one": "Message {{count}} contact",
+			"title_other": "Message {{count}} contacts",
+			"description": "Send a Typebot message flow, or write a one-off email or WhatsApp. Contacts without the needed email or phone are skipped.",
+			"about": "About pool",
+			"noPool": "No pool",
+			"aboutHint": "Fills {{pool}} and the personal apply {{link}}.",
+			"flowTab": "Message flow",
+			"composeTab": "Write a message",
+			"flow": "Message flow",
+			"noFlows": "No message flows yet.",
+			"channel": "Channel",
+			"channels": {
+				"email": "Email",
+				"whatsapp": "WhatsApp"
+			},
+			"subject": "Subject",
+			"body": "Message",
+			"bodyPlaceholder": "Hi {{first_name}}, …",
+			"templateHint": "Outside 24 hours after their last reply, WhatsApp only delivers an approved template. Name it here and give its parameters, one per line.",
+			"template": "Template name (optional)",
+			"language": "Language",
+			"params": "Template parameters",
+			"paramsPlaceholder": "{{first_name}}\n{{link}}",
+			"placeholders": "Placeholders: {{placeholders}}",
+			"submit_one": "Send to {{count}}",
+			"submit_other": "Send to {{count}}",
+			"result": "Sent {{sent}}, skipped {{skipped}}, failed {{failed}}.",
+			"error": "Couldn't send the message."
+		},
+		"flows": {
+			"title": "Message flows",
+			"manage": "Manage message flows",
+			"description": "Typebot flows recruiters can send by hand from the Contacts and pool pages.",
+			"empty": "No message flows yet.",
+			"name": "Name",
+			"namePlaceholder": "Re-invite",
+			"add": "Add flow",
+			"remove": "Remove flow",
+			"hint": "Each flow starts with the contact's name, first_name, phone, email, pool, link and lead_id filled.",
+			"saved": "Message flows saved.",
+			"saveError": "Couldn't save the message flows."
 		}
 	}
 }

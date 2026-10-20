@@ -14,10 +14,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Pool } from "@/fetchers/pool/types";
 import useCreatePool from "@/hooks/mutations/pool/use-create-pool";
 import useUpdatePool from "@/hooks/mutations/pool/use-update-pool";
+import useGetProjects from "@/hooks/queries/project/use-get-projects";
 import { toast } from "@/lib/toast";
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -55,6 +63,11 @@ export function PoolDialog({
   const [slug, setSlug] = useState(pool?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(!!pool);
   const [description, setDescription] = useState(pool?.description ?? "");
+  const [screeningProjectId, setScreeningProjectId] = useState(
+    pool?.screeningProjectId ?? "",
+  );
+  const { data: projects = [] } = useGetProjects({ workspaceId });
+  const NO_BOARD = "__none";
   const id = useId();
   const pending = creating || updating;
   const effectiveSlug = slugTouched ? slug.trim() : slugify(name);
@@ -69,6 +82,7 @@ export function PoolDialog({
         name: name.trim(),
         slug: effectiveSlug || undefined,
         description: description.trim() || null,
+        screeningProjectId: screeningProjectId || null,
       };
       const saved = pool
         ? await updatePool({ poolId: pool.id, ...body })
@@ -146,6 +160,40 @@ export function PoolDialog({
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <Label>{t("contacts:pools.screeningBoard")}</Label>
+              <Select
+                value={screeningProjectId || NO_BOARD}
+                onValueChange={(next) =>
+                  setScreeningProjectId(
+                    !next || next === NO_BOARD ? "" : String(next),
+                  )
+                }
+              >
+                <SelectTrigger
+                  size="sm"
+                  aria-label={t("contacts:pools.screeningBoard")}
+                >
+                  <SelectValue>
+                    {projects.find((p) => p.id === screeningProjectId)?.name ??
+                      t("contacts:pools.noScreeningBoard")}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  <SelectItem value={NO_BOARD}>
+                    {t("contacts:pools.noScreeningBoard")}
+                  </SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-muted-foreground text-xs">
+                {t("contacts:pools.screeningBoardHint")}
+              </p>
+            </div>
           </DialogPanel>
           <DialogFooter>
             <Button
@@ -156,7 +204,7 @@ export function PoolDialog({
               {t("common:actions.cancel")}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              {pool ? t("common:actions.save") : t("contacts:pools.create")}
+              {pool ? t("contacts:save") : t("contacts:pools.create")}
             </Button>
           </DialogFooter>
         </form>

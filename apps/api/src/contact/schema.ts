@@ -23,7 +23,12 @@ import {
   unique,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
-import { taskTable, userTable, workspaceTable } from "../database/schema";
+import {
+  projectTable,
+  taskTable,
+  userTable,
+  workspaceTable,
+} from "../database/schema";
 
 const utcNow = sql`(now() AT TIME ZONE 'utc')`;
 const timestamps = {
@@ -52,6 +57,8 @@ export const contactTable = pgTable(
     // Id in the source system (e.g. the CRM / ad lead id). Unique per workspace.
     externalId: text("external_id"),
     source: text("source"),
+    // Same scale as task priority: no-priority | low | medium | high | urgent.
+    priority: text("priority").default("no-priority").notNull(),
     ...timestamps,
   },
   (table) => [
@@ -80,6 +87,11 @@ export const poolTable = pgTable(
     description: text("description"),
     icon: text("icon"),
     position: integer("position").default(0).notNull(),
+    // The board people are screened on before joining (its backlog is the queue).
+    screeningProjectId: text("screening_project_id").references(
+      () => projectTable.id,
+      { onDelete: "set null", onUpdate: "cascade" },
+    ),
     ...timestamps,
   },
   (table) => [
@@ -216,4 +228,74 @@ export const taskPoolMemberTable = pgTable(
     ),
     index("task_pool_member_memberId_idx").on(table.memberId),
   ],
+);
+
+// Pools a contact is meant for (not yet a member): set by hand, by the lead
+// source, or by the glue when it invites the person to a pool's workflow.
+export const contactTargetPoolTable = pgTable(
+  "contact_target_pool",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    contactId: text("contact_id")
+      .notNull()
+      .references(() => contactTable.id, cascade),
+    poolId: text("pool_id")
+      .notNull()
+      .references(() => poolTable.id, cascade),
+    createdAt: timestamp("created_at", { mode: "date" })
+      .default(utcNow)
+      .notNull(),
+  },
+  (table) => [
+    unique("contact_target_pool_contact_pool_unique").on(
+      table.contactId,
+      table.poolId,
+    ),
+    index("contact_target_pool_poolId_idx").on(table.poolId),
+  ],
+);
+
+// Messages sent to a contact screened on this board: each step starts a
+// Typebot "message flow" (which sends the email / WhatsApp itself), counted in
+// days from when the contact's task leaves the backlog. The glue runs them and
+// stops once the task reaches a final stage.
+export const projectMessageStepTable = pgTable(
+  "project_message_step",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, cascade),
+    name: text("name").notNull(),
+    typebotPublicId: text("typebot_public_id").notNull(),
+    offsetDays: integer("offset_days").default(0).notNull(),
+    position: integer("position").default(0).notNull(),
+    enabled: boolean("enabled").default(true).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("project_message_step_projectId_idx").on(table.projectId)],
+);
+
+// Message flows recruiters can send by hand from the Contacts and pool pages:
+// a named Typebot "message flow" the glue starts per selected contact.
+export const messageFlowTable = pgTable(
+  "message_flow",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, cascade),
+    name: text("name").notNull(),
+    typebotPublicId: text("typebot_public_id").notNull(),
+    description: text("description"),
+    position: integer("position").default(0).notNull(),
+    ...timestamps,
+  },
+  (table) => [index("message_flow_workspaceId_idx").on(table.workspaceId)],
 );

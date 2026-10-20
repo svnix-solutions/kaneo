@@ -2,7 +2,8 @@
 //
 // A filter is a list of conditions joined by all/any. Each condition names a
 // subject -- a contact property, a field of the pool being listed
-// ("field:<id>"), pool membership ("pools", contacts list only) or a board
+// ("field:<id>"), pool membership or target pools ("pools" / "targets",
+// contacts list only), priority, or a board
 // ("board:<projectId>", matched through the contact's linked tasks) -- an
 // operator allowed for that subject's type, and a value.
 import { and, eq, ilike, inArray, or, type SQL, sql } from "drizzle-orm";
@@ -13,7 +14,9 @@ import { assertProjectAccess } from "../project-access/assert-project-access";
 import { escapeLikePattern } from "../search/like-pattern";
 import {
   contactTable,
+  contactTargetPoolTable,
   poolFieldDefinitionTable as fieldTable,
+  poolTable,
   poolMemberTable,
   poolFieldValueTable as valueTable,
   taskContactTable,
@@ -41,6 +44,7 @@ type Kind =
   | "dropdown"
   | "multiselect"
   | "pools"
+  | "stage"
   | "board";
 
 export const OPERATORS_BY_KIND: Record<Kind, readonly FilterOperator[]> = {
@@ -59,6 +63,8 @@ export const OPERATORS_BY_KIND: Record<Kind, readonly FilterOperator[]> = {
   dropdown: ["any_of", "none_of", "empty", "not_empty"],
   multiselect: ["any_of", "all_of", "none_of", "empty", "not_empty"],
   pools: ["any_of", "all_of", "none_of", "empty", "not_empty"],
+  // A pool's screening stage: "none" (not on the board), "backlog", or column ids.
+  stage: ["any_of", "none_of"],
   board: ["any_of", "none_of", "empty", "not_empty"],
 };
 
@@ -87,6 +93,8 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 type Subject = {
   kind: Kind;
+  /** For "pools": membership, or the pools a contact is meant for. */
+  link?: typeof poolMemberTable | typeof contactTargetPoolTable;
   label: string;
   expr: SQL;
   projectId?: string;
@@ -148,6 +156,30 @@ async function resolveSubjects(
     );
   }
 
+  const screeningPoolIds = [
+    ...new Set(
+      conditions
+        .map((c) => c.field)
+        .filter((f) => f.startsWith("screening:"))
+        .map((f) => f.slice(10)),
+    ),
+  ];
+  const screeningPools = screeningPoolIds.length
+    ? await db
+        .select({
+          id: poolTable.id,
+          name: poolTable.name,
+          screeningProjectId: poolTable.screeningProjectId,
+        })
+        .from(poolTable)
+        .where(
+          and(
+            eq(poolTable.workspaceId, workspaceId),
+            inArray(poolTable.id, screeningPoolIds),
+          ),
+        )
+    : [];
+  const byScreening = new Map(screeningPools.map((p) => [p.id, p]));
   const byField = new Map(fields.map((f) => [f.id, f]));
   const byProject = new Map(projects.map((p) => [p.id, p]));
 
@@ -186,7 +218,38 @@ async function resolveSubjects(
       };
     }
     if (key === "pools" && !poolId) {
-      return { kind: "pools", label: "pools", expr: sql`` };
+      return {
+        kind: "pools",
+        label: "pools",
+        expr: sql``,
+        link: poolMemberTable,
+      };
+    }
+    if (key === "targets" && !poolId) {
+      return {
+        kind: "pools",
+        label: "targets",
+        expr: sql``,
+        link: contactTargetPoolTable,
+      };
+    }
+    if (key === "priority") {
+      return {
+        kind: "dropdown",
+        label: "priority",
+        expr: sql`${contactTable.priority}`,
+      };
+    }
+    if (key.startsWith("screening:")) {
+      const pool = byScreening.get(key.slice(10));
+      if (!pool?.screeningProjectId)
+        return badRequest(`No screening board for pool in filter: ${key}`);
+      return {
+        kind: "stage",
+        label: pool.name,
+        expr: sql``,
+        projectId: pool.screeningProjectId,
+      };
     }
     if (key.startsWith("board:")) {
       const project = byProject.get(key.slice(6));
@@ -241,6 +304,7 @@ function readValue(
     case "dropdown":
     case "multiselect":
     case "pools":
+    case "stage":
     case "board": {
       const list = (Array.isArray(value) ? value : [value])
         .filter((v): v is string => typeof v === "string")
@@ -367,18 +431,17 @@ function conditionSql(
       }
     }
     case "pools": {
+      const link = subject.link ?? poolMemberTable;
       const inPools = (ids?: string[]) =>
-        sql`EXISTS (SELECT 1 FROM ${poolMemberTable} WHERE ${poolMemberTable.contactId} = ${contactTable.id}${
-          ids
-            ? sql` AND ${poolMemberTable.poolId} = ANY(${textArray(ids)})`
-            : sql``
+        sql`EXISTS (SELECT 1 FROM ${link} WHERE ${link.contactId} = ${contactTable.id}${
+          ids ? sql` AND ${link.poolId} = ANY(${textArray(ids)})` : sql``
         })`;
       const ids = v as string[];
       switch (op) {
         case "any_of":
           return inPools(ids);
         case "all_of":
-          return sql`(SELECT count(DISTINCT ${poolMemberTable.poolId}) FROM ${poolMemberTable} WHERE ${poolMemberTable.contactId} = ${contactTable.id} AND ${poolMemberTable.poolId} = ANY(${textArray(ids)})) = ${new Set(ids).size}`;
+          return sql`(SELECT count(DISTINCT ${link.poolId}) FROM ${link} WHERE ${link.contactId} = ${contactTable.id} AND ${link.poolId} = ANY(${textArray(ids)})) = ${new Set(ids).size}`;
         case "none_of":
           return sql`NOT ${inPools(ids)}`;
         case "empty":
@@ -386,6 +449,26 @@ function conditionSql(
         default:
           return inPools();
       }
+    }
+    case "stage": {
+      // Through the contact's task on the pool's screening board.
+      const onBoard = (cond: SQL) =>
+        sql`EXISTS (SELECT 1 FROM ${taskTable} INNER JOIN ${taskContactTable} ON ${taskContactTable.taskId} = ${taskTable.id} WHERE ${taskContactTable.contactId} = ${contactTable.id} AND ${taskTable.projectId} = ${subject.projectId} AND ${cond})`;
+      const values = v as string[];
+      const columns = values.filter((x) => x !== "none" && x !== "backlog");
+      const parts: SQL[] = [];
+      if (values.includes("none"))
+        parts.push(sql`NOT ${onBoard(sql`${taskTable.status} <> 'archived'`)}`);
+      if (values.includes("backlog"))
+        parts.push(onBoard(sql`${taskTable.status} = 'planned'`));
+      if (columns.length)
+        parts.push(
+          onBoard(
+            sql`${taskTable.columnId} = ANY(${textArray(columns)}) AND ${taskTable.status} <> 'planned'`,
+          ),
+        );
+      const any = sql`(${sql.join(parts, sql` OR `)})`;
+      return op === "none_of" ? sql`NOT ${any}` : any;
     }
     case "board": {
       // A task on the board linked to the contact, or to the person as a

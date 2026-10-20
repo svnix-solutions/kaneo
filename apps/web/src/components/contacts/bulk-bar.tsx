@@ -1,4 +1,14 @@
-import { Download, FolderPlus, Kanban, Trash2, UserMinus } from "lucide-react";
+import {
+  Crosshair,
+  Download,
+  FolderPlus,
+  ListPlus,
+  SignalHigh,
+  Trash2,
+  UserMinus,
+  Kanban,
+  Send,
+} from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { barButtonClass } from "@/components/bulk-selection/bar-button-class";
@@ -15,6 +25,8 @@ import { ConfirmDialog } from "@/components/settings/confirm-dialog";
 import { Toolbar } from "@/components/ui/toolbar";
 import useBulkDeleteContacts from "@/hooks/mutations/contact/use-bulk-delete-contacts";
 import useBulkUpdateContacts from "@/hooks/mutations/contact/use-bulk-update-contacts";
+import type { ContactPriority } from "@/fetchers/contact/bulk-update-contacts";
+import useAddContactsToScreening from "@/hooks/mutations/pool/use-add-contacts-to-screening";
 import useBulkAddPoolMembers from "@/hooks/mutations/pool/use-bulk-add-pool-members";
 import useBulkRemovePoolMembers from "@/hooks/mutations/pool/use-bulk-remove-pool-members";
 import useBulkUpdatePoolMembers from "@/hooks/mutations/pool/use-bulk-update-pool-members";
@@ -26,6 +38,7 @@ import { BulkSetFieldPopover, SOURCE_FIELD_ID } from "./bulk-set-field-popover";
 import type { ContactRow } from "./contact-row";
 import { contactsToCsv, downloadCsv } from "./export-contacts-csv";
 import { toValueInput } from "./field-adapter";
+import { priorityOptions } from "./priority";
 
 type BulkBarProps = {
   workspaceId: string;
@@ -35,6 +48,7 @@ type BulkBarProps = {
   fields?: CustomFieldDefinition[];
   selectAll: () => void;
   clearSelection: () => void;
+  onSendMessage?: () => void;
 };
 
 type Confirm = "delete" | "remove" | null;
@@ -46,6 +60,7 @@ export function BulkBar({
   fields = [],
   selectAll,
   clearSelection,
+  onSendMessage,
 }: BulkBarProps) {
   const { t } = useTranslation();
   const { mounted, hidden, displayCount } = useToolbarPresence(selected.length);
@@ -64,6 +79,7 @@ export function BulkBar({
   const { mutateAsync: deleteContacts, isPending: deleting } =
     useBulkDeleteContacts();
   const [confirm, setConfirm] = useState<Confirm>(null);
+  const { mutateAsync: queueScreening } = useAddContactsToScreening();
   const ids = selected.map((c) => c.id);
 
   if (!mounted) return null;
@@ -101,6 +117,51 @@ export function BulkBar({
       },
       t("contacts:bulk.updateError", { field: field.name }),
     );
+
+  const setPriority = (priority: string) =>
+    run(
+      async () => {
+        const { updated } = await updateContacts({
+          workspaceId,
+          ids,
+          priority: priority as ContactPriority,
+        });
+        return t("contacts:bulk.updated", { count: updated });
+      },
+      t("contacts:bulk.updateError", { field: t("contacts:columns.priority") }),
+    );
+
+  const addTarget = (poolId: string) => {
+    const target = pools.find((p) => p.id === poolId);
+    return run(
+      async () => {
+        const { updated } = await updateContacts({
+          workspaceId,
+          ids,
+          addTargetPoolIds: [poolId],
+        });
+        return t("contacts:bulk.targeted", {
+          count: updated,
+          pool: target?.name ?? "",
+        });
+      },
+      t("contacts:bulk.updateError", {
+        field: t("contacts:columns.targetPools"),
+      }),
+    );
+  };
+
+  const addToScreening = (poolId: string) => {
+    const target = pools.find((p) => p.id === poolId);
+    return run(async () => {
+      const { added, skipped } = await queueScreening({ poolId, ids });
+      return t("contacts:screening.queued", {
+        count: added,
+        pool: target?.name ?? "",
+        skipped,
+      });
+    }, t("contacts:screening.queueError"));
+  };
 
   const addToPool = (poolId: string) => {
     const target = pools.find((p) => p.id === poolId);
@@ -161,7 +222,12 @@ export function BulkBar({
   const otherPools = pools
     .filter((p) => p.id !== pool?.id)
     .map((p) => ({ value: p.id, label: p.name }));
+  const poolOptions = pools.map((p) => ({ value: p.id, label: p.name }));
+  const screeningPools = pools
+    .filter((p) => p.screeningProjectId)
+    .map((p) => ({ value: p.id, label: p.name }));
   const exportLabel = t("contacts:bulk.export");
+  const sendLabel = t("contacts:send.button");
   const boardLabel = t("contacts:pipelines.addToBoard");
   const removeLabel = t("contacts:bulk.remove");
   const deleteLabel = t("contacts:bulk.delete");
@@ -181,6 +247,33 @@ export function BulkBar({
             <BulkSetFieldPopover
               fields={fields}
               onApply={(field, value) => void setField(field, value)}
+            />
+          )}
+          {canEdit && !pool && (
+            <BulkOptionPopover
+              icon={<SignalHigh />}
+              label={t("contacts:columns.priority")}
+              placeholder={t("contacts:bulk.priorityPlaceholder")}
+              options={priorityOptions()}
+              onSelect={(priority) => void setPriority(priority)}
+            />
+          )}
+          {canEdit && !pool && poolOptions.length > 0 && (
+            <BulkOptionPopover
+              icon={<Crosshair />}
+              label={t("contacts:bulk.addTarget")}
+              placeholder={t("contacts:bulk.poolPlaceholder")}
+              options={poolOptions}
+              onSelect={(poolId) => void addTarget(poolId)}
+            />
+          )}
+          {canCreateTasks() && !pool && screeningPools.length > 0 && (
+            <BulkOptionPopover
+              icon={<ListPlus />}
+              label={t("contacts:screening.addToScreening")}
+              placeholder={t("contacts:bulk.poolPlaceholder")}
+              options={screeningPools}
+              onSelect={(poolId) => void addToScreening(poolId)}
             />
           )}
           {canEdit && otherPools.length > 0 && (
@@ -206,6 +299,18 @@ export function BulkBar({
               }
             />
           )}
+          {canEdit && onSendMessage ? (
+            <BarTooltip label={sendLabel}>
+              <button
+                type="button"
+                onClick={onSendMessage}
+                className={barButtonClass}
+              >
+                <Send />
+                <span className="max-lg:sr-only">{sendLabel}</span>
+              </button>
+            </BarTooltip>
+          ) : null}
           <BarTooltip label={exportLabel}>
             <button
               type="button"

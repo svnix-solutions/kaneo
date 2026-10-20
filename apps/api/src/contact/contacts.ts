@@ -24,9 +24,11 @@ import {
   valuesFor,
 } from "./fields";
 import { buildContactFilter, type ContactFilter } from "./filter";
+import { poolStatesFor } from "./pool-state";
 import {
   contactTable,
   poolMemberTable,
+  contactTargetPoolTable,
   poolTable,
   taskContactTable,
 } from "./schema";
@@ -34,19 +36,24 @@ import {
 export type Contact = typeof contactTable.$inferSelect;
 type PoolRef = { id: string; name: string; slug: string };
 
-async function poolsFor(contactIds: string[], conn: DbLike = db) {
+// Pools by contact, through a contact -> pool link table (memberships or targets).
+async function linkedPools(
+  link: typeof poolMemberTable | typeof contactTargetPoolTable,
+  contactIds: string[],
+  conn: DbLike = db,
+) {
   const map = new Map<string, PoolRef[]>();
   if (contactIds.length === 0) return map;
   const rows = await conn
     .select({
-      contactId: poolMemberTable.contactId,
+      contactId: link.contactId,
       id: poolTable.id,
       name: poolTable.name,
       slug: poolTable.slug,
     })
-    .from(poolMemberTable)
-    .innerJoin(poolTable, eq(poolTable.id, poolMemberTable.poolId))
-    .where(inArray(poolMemberTable.contactId, contactIds))
+    .from(link)
+    .innerJoin(poolTable, eq(poolTable.id, link.poolId))
+    .where(inArray(link.contactId, contactIds))
     .orderBy(asc(poolTable.position), asc(poolTable.name));
   for (const { contactId, ...pool } of rows) {
     map.set(contactId, [...(map.get(contactId) ?? []), pool]);
@@ -63,19 +70,24 @@ export function serializeContactCore(c: Contact) {
     email: c.email,
     externalId: c.externalId,
     source: c.source,
+    priority: c.priority,
     createdAt: c.createdAt.toISOString(),
     updatedAt: c.updatedAt.toISOString(),
   };
 }
 
 async function serializeContacts(rows: Contact[], conn: DbLike = db) {
-  const pools = await poolsFor(
-    rows.map((r) => r.id),
-    conn,
-  );
+  const ids = rows.map((r) => r.id);
+  const [pools, targets, states] = await Promise.all([
+    linkedPools(poolMemberTable, ids, conn),
+    linkedPools(contactTargetPoolTable, ids, conn),
+    poolStatesFor(ids, conn),
+  ]);
   return rows.map((r) => ({
     ...serializeContactCore(r),
     pools: pools.get(r.id) ?? [],
+    targetPools: targets.get(r.id) ?? [],
+    poolStates: states.get(r.id) ?? [],
   }));
 }
 
@@ -189,6 +201,7 @@ type CoreInput = {
   email?: string | null;
   externalId?: string | null;
   source?: string | null;
+  priority?: string;
 };
 
 const blankToNull = (v: string | null | undefined) =>
@@ -200,6 +213,7 @@ function coreValues(input: CoreInput) {
   for (const k of ["phone", "email", "externalId", "source"] as const) {
     if (input[k] !== undefined) out[k] = blankToNull(input[k]);
   }
+  if (input.priority !== undefined) out.priority = input.priority;
   return out;
 }
 
@@ -208,18 +222,87 @@ const externalIdTaken = () =>
     message: "A contact with this externalId already exists",
   });
 
+// ---- target pools ------------------------------------------------------------------
+
+/** Pool ids in the workspace; anything else is a 400. */
+async function poolIdsInWorkspace(
+  conn: DbLike,
+  workspaceId: string,
+  by: { ids?: string[]; slugs?: string[] },
+) {
+  const ids = [...new Set(by.ids ?? [])];
+  const slugs = [...new Set(by.slugs ?? [])];
+  if (ids.length === 0 && slugs.length === 0) return [];
+  const rows = await conn
+    .select({ id: poolTable.id, slug: poolTable.slug })
+    .from(poolTable)
+    .where(
+      and(
+        eq(poolTable.workspaceId, workspaceId),
+        or(
+          ids.length ? inArray(poolTable.id, ids) : undefined,
+          slugs.length ? inArray(poolTable.slug, slugs) : undefined,
+        ),
+      ),
+    );
+  const missing = [
+    ...ids.filter((id) => !rows.some((r) => r.id === id)),
+    ...slugs.filter((slug) => !rows.some((r) => r.slug === slug)),
+  ];
+  if (missing.length) badRequest(`Unknown pool: ${missing.join(", ")}`);
+  return rows.map((r) => r.id);
+}
+
+async function addTargets(
+  conn: DbLike,
+  contactIds: string[],
+  poolIds: string[],
+) {
+  if (contactIds.length === 0 || poolIds.length === 0) return;
+  await conn
+    .insert(contactTargetPoolTable)
+    .values(
+      contactIds.flatMap((contactId) =>
+        poolIds.map((poolId) => ({ contactId, poolId })),
+      ),
+    )
+    .onConflictDoNothing();
+}
+
+/** Replace a contact's target pools. */
+export async function setTargets(contactId: string, poolIds: string[]) {
+  const contact = await findContact(contactId);
+  return db.transaction(async (tx) => {
+    const ids = await poolIdsInWorkspace(tx, contact.workspaceId, {
+      ids: poolIds,
+    });
+    await tx
+      .delete(contactTargetPoolTable)
+      .where(eq(contactTargetPoolTable.contactId, contactId));
+    await addTargets(tx, [contactId], ids);
+    return serializeContact(contact, tx);
+  });
+}
+
 export async function createContact(
   workspaceId: string,
-  input: CoreInput & { name: string },
+  input: CoreInput & { name: string; targetPoolIds?: string[] },
 ) {
   try {
-    const [created] = await db
-      .insert(contactTable)
-      .values({ workspaceId, ...coreValues(input), name: input.name.trim() })
-      .returning();
-    if (!created)
-      throw new HTTPException(500, { message: "Failed to create contact" });
-    return { ...(await serializeContact(created)), created: true };
+    const created = await db.transaction(async (tx) => {
+      const [row] = await tx
+        .insert(contactTable)
+        .values({ workspaceId, ...coreValues(input), name: input.name.trim() })
+        .returning();
+      if (!row)
+        throw new HTTPException(500, { message: "Failed to create contact" });
+      const poolIds = await poolIdsInWorkspace(tx, workspaceId, {
+        ids: input.targetPoolIds,
+      });
+      await addTargets(tx, [row.id], poolIds);
+      return serializeContact(row, tx);
+    });
+    return { ...created, created: true };
   } catch (err) {
     if (isUniqueViolation(err)) throw externalIdTaken();
     throw err;
@@ -230,10 +313,13 @@ export async function createContact(
 export async function upsertContactByExternalId(
   workspaceId: string,
   externalId: string,
-  input: CoreInput,
+  input: CoreInput & { targetPools?: string[] },
 ) {
   const run = () =>
     db.transaction(async (tx) => {
+      const targetIds = await poolIdsInWorkspace(tx, workspaceId, {
+        slugs: input.targetPools,
+      });
       const existing = await findContactByExternalId(
         workspaceId,
         externalId,
@@ -250,6 +336,7 @@ export async function upsertContactByExternalId(
                 .returning()
             )[0] ?? existing)
           : existing;
+        await addTargets(tx, [row.id], targetIds);
         return { ...(await serializeContact(row, tx)), created: false };
       }
       const name =
@@ -265,6 +352,7 @@ export async function upsertContactByExternalId(
         .returning();
       if (!inserted)
         throw new HTTPException(500, { message: "Failed to create contact" });
+      await addTargets(tx, [inserted.id], targetIds);
       return { ...(await serializeContact(inserted, tx)), created: true };
     });
   try {
@@ -347,15 +435,50 @@ export async function contactIdsInWorkspace(
 
 export async function bulkUpdateContacts(
   workspaceId: string,
-  body: { ids: string[]; source: string | null },
+  body: {
+    ids: string[];
+    source?: string | null;
+    priority?: string;
+    addTargetPoolIds?: string[];
+    removeTargetPoolIds?: string[];
+  },
 ) {
-  const ids = await contactIdsInWorkspace(db, workspaceId, body.ids);
-  if (ids.length === 0) return { updated: 0 };
-  await db
-    .update(contactTable)
-    .set({ source: blankToNull(body.source), updatedAt: new Date() })
-    .where(inArray(contactTable.id, ids));
-  return { updated: ids.length };
+  if (
+    body.source === undefined &&
+    body.priority === undefined &&
+    !body.addTargetPoolIds?.length &&
+    !body.removeTargetPoolIds?.length
+  )
+    badRequest("Nothing to update");
+  return db.transaction(async (tx) => {
+    const ids = await contactIdsInWorkspace(tx, workspaceId, body.ids);
+    if (ids.length === 0) return { updated: 0 };
+    const add = await poolIdsInWorkspace(tx, workspaceId, {
+      ids: body.addTargetPoolIds,
+    });
+    await addTargets(tx, ids, add);
+    if (body.removeTargetPoolIds?.length) {
+      await tx
+        .delete(contactTargetPoolTable)
+        .where(
+          and(
+            inArray(contactTargetPoolTable.contactId, ids),
+            inArray(contactTargetPoolTable.poolId, body.removeTargetPoolIds),
+          ),
+        );
+    }
+    await tx
+      .update(contactTable)
+      .set({
+        ...(body.source !== undefined
+          ? { source: blankToNull(body.source) }
+          : {}),
+        ...(body.priority !== undefined ? { priority: body.priority } : {}),
+        updatedAt: new Date(),
+      })
+      .where(inArray(contactTable.id, ids));
+    return { updated: ids.length };
+  });
 }
 
 export async function bulkDeleteContacts(workspaceId: string, ids: string[]) {
